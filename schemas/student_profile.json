@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "학생 프로필 (학적 DB 조회 결과)",
+  "description": "우리 기여 C2. hoBIT은 학생 자기보고에 의존하며 이를 한계로 명시했다(미검증 입력 전파). 직원용 시스템이므로 DB 조회로 검증한다. 시연용 가상 학생 데이터로 채운다.",
+  "type": "object",
+  "required": ["student_id", "verified", "admission_year", "department"],
+  "properties": {
+    "student_id":     { "type": "string" },
+    "verified":       { "type": "boolean", "description": "DB 조회로 확인됨 = true. 직원 수기 입력 = false" },
+    "admission_year": { "type": "integer" },
+    "department":     { "type": "string" },
+    "level":          { "enum": ["학부", "대학원"] },
+    "major_type":     { "type": "string" },
+    "student_status": { "type": "string", "description": "재학/휴학/수료/복학예정 등" },
+    "grade":          { "type": ["integer", "null"] },
+    "transfer_in":    { "type": "boolean", "description": "전과·편입 여부. 적용 기준에 영향" },
+    "leave_terms":    { "type": "integer", "description": "누적 휴학 학기" },
+    "credits": {
+      "description": "학점은 벡터 검색이 아니라 여기서 계산한다",
+      "type": "object",
+      "properties": {
+        "total":          { "type": "number" },
+        "major_required": { "type": "number" },
+        "major_elective": { "type": "number" },
+        "general":        { "type": "number" }
+      }
+    },
+    "certifications": { "type": "object", "description": "영어/정보인증 충족 여부" }
+  }
+}

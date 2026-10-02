@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "문서 청크 메타데이터",
+  "description": "출처: hoBIT(arXiv:2608.26604) §2.1의 프로필 주석 + null 규약을 차용하고, 시간 축 필드를 추가했다. 적용 범위를 결정하지 않는 필드는 반드시 null로 둔다.",
+  "type": "object",
+  "required": ["doc_id", "chunk_id", "text", "source", "applies_to", "validity", "confirm_status"],
+  "properties": {
+    "doc_id":    { "type": "string" },
+    "chunk_id":  { "type": "string" },
+    "text":      { "type": "string" },
+
+    "source": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type":        { "enum": ["규정", "안내", "FAQ", "공지", "교육과정"] },
+        "title":       { "type": "string" },
+        "url":         { "type": "string" },
+        "article":     { "type": ["string", "null"], "description": "조문/항목 번호" },
+        "attachment":  { "type": ["string", "null"] }
+      }
+    },
+
+    "applies_to": {
+      "description": "프로필 축. 적용 대상을 결정하지 않는 필드는 null (hoBIT 규약)",
+      "type": "object",
+      "properties": {
+        "org":             { "type": ["string", "null"], "description": "학교/대학/학과" },
+        "level":           { "enum": ["학부", "대학원", null] },
+        "admission_years": { "type": ["array", "null"], "items": { "type": "integer" }, "description": "입학연도 또는 범위" },
+        "major_type":      { "type": ["string", "null"], "description": "주전공/복수/부전공/심화 등" },
+        "student_status":  { "type": ["string", "null"], "description": "재학/휴학/수료 등" }
+      }
+    },
+
+    "validity": {
+      "description": "시간 축. 선행연구에 없는 우리 기여(C1). 세 날짜를 절대 섞지 않는다.",
+      "type": "object",
+      "properties": {
+        "posted_date":     { "type": ["string", "null"], "format": "date", "description": "게시일. 시행일 대용으로 쓰지 말 것" },
+        "amended_date":    { "type": ["string", "null"], "format": "date", "description": "개정일" },
+        "effective_from":  { "type": ["string", "null"], "format": "date", "description": "시행일" },
+        "effective_until": { "type": ["string", "null"], "format": "date" },
+        "target_term":     { "type": ["string", "null"], "description": "대상 학기. 예: 2026-2" },
+        "curriculum_year": { "type": ["integer", "null"], "description": "교육과정 연도. 입학연도와 별도 관리" },
+        "transitional":    { "type": ["string", "null"], "description": "부칙·경과조치 원문" }
+      }
+    },
+
+    "related_doc_ids": { "type": "array", "items": { "type": "string" }, "description": "규정 ↔ 안내 ↔ FAQ ↔ 공지 연결" },
+
+    "confirm_status": {
+      "enum": ["확인완료", "적용범위_확인필요", "최신성_확인필요"],
+      "description": "적용 연도가 없으면 '적용범위_확인필요'. 추측해서 채우지 않는다."
+    },
+
+    "index": {
+      "enum": ["static", "dynamic"],
+      "description": "갱신 빈도에 따른 인덱스 분리 (hoBIT §2.1). 규정=static, 공지=dynamic"
+    },
+
+    "collected_at": { "type": "string", "format": "date" }
+  }
+}
