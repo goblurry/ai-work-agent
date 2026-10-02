@@ -4,8 +4,8 @@
 {"id": "Q04", "q": "복수전공 이수요건이 제 학번 기준으로 몇 학점인가요?", "axes": ["P", "T"], "need_profile_fields": ["admission_year", "major_type"], "need_evidence_types": ["교육과정"], "expect": "B", "gold_doc_ids": [], "gold_answer": null}
 {"id": "Q05", "q": "복수전공 포기하면 졸업요건이 어떻게 되나요?", "axes": ["P", "T"], "need_profile_fields": ["admission_year", "major_type"], "need_evidence_types": ["규정", "안내"], "expect": "B", "gold_doc_ids": [], "gold_answer": null}
 {"id": "Q06", "q": "부전공과 복수전공을 동시에 할 수 있나요?", "axes": ["P"], "need_profile_fields": ["department"], "need_evidence_types": ["규정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null}
-{"id": "Q07", "q": "2021학번 ○○학과 복수전공 이수학점은?", "axes": ["P"], "need_profile_fields": [], "need_evidence_types": ["교육과정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null, "pair": "Q08"}
-{"id": "Q08", "q": "2025학번 ○○학과 복수전공 이수학점은?", "axes": ["P"], "need_profile_fields": [], "need_evidence_types": ["교육과정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null, "pair": "Q07"}
+{"id": "Q07", "q": "2021학번 컴퓨터공학 복수전공 이수학점은?", "axes": ["P"], "need_profile_fields": [], "need_evidence_types": ["교육과정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null, "pair": "Q08", "note": "2024 학제개편(엘텍공과대학 소프트웨어학부 컴퓨터공학전공 → 인공지능대학 컴퓨터공학과)을 사이에 둔 쌍"}
+{"id": "Q08", "q": "2025학번 컴퓨터공학 복수전공 이수학점은?", "axes": ["P"], "need_profile_fields": [], "need_evidence_types": ["교육과정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null, "pair": "Q07", "note": "2024 학제개편(엘텍공과대학 소프트웨어학부 컴퓨터공학전공 → 인공지능대학 컴퓨터공학과)을 사이에 둔 쌍"}
 {"id": "Q09", "q": "전과한 학생도 원래 학번 기준 교육과정을 따르나요?", "axes": ["P", "T"], "need_profile_fields": ["admission_year", "transfer_in"], "need_evidence_types": ["규정"], "expect": "C", "gold_doc_ids": [], "gold_answer": null}
 {"id": "Q10", "q": "저 졸업 가능한가요?", "axes": ["P", "C"], "need_profile_fields": ["credits"], "need_evidence_types": ["교육과정"], "expect": "B", "gold_doc_ids": [], "gold_answer": null}
 {"id": "Q11", "q": "지금까지 들은 학점으로 전공 필수를 다 채웠나요?", "axes": ["C"], "need_profile_fields": ["credits"], "need_evidence_types": ["교육과정"], "expect": "A", "gold_doc_ids": [], "gold_answer": null}
@@ -30,3 +30,6 @@
 {"id": "Q30", "q": "2027학년도 교육과정은 어떻게 바뀌나요?", "axes": ["X"], "need_profile_fields": [], "need_evidence_types": [], "expect": "C", "gold_doc_ids": [], "gold_answer": null, "expect_reason": "근거없음"}
 {"id": "Q31", "q": "교수님께 메일로 부탁드리면 기한 연장 되나요?", "axes": ["X"], "need_profile_fields": [], "need_evidence_types": [], "expect": "C", "gold_doc_ids": [], "gold_answer": null, "expect_reason": "재량영역"}
 {"id": "Q32", "q": "올해 졸업평가 방식이 이거 맞나요? (안내 표제가 '2023학년도 1학기')", "axes": ["X"], "need_profile_fields": [], "need_evidence_types": ["안내"], "expect": "C", "gold_doc_ids": [], "gold_answer": null, "expect_reason": "최신성불명"}
+{"id": "Q33", "q": "저 컴퓨터공학인데 소속이 공과대학인가요 인공지능대학인가요?", "axes": ["P", "T"], "need_profile_fields": ["admission_year"], "need_evidence_types": ["규정", "공지"], "expect": "B", "gold_doc_ids": [], "gold_answer": null, "note": "2024 개편 전후로 답이 갈림. 입학연도 없이는 답할 수 없다"}
+{"id": "Q34", "q": "2022학번인데 졸업요건이 소프트웨어학부 기준인가요 컴퓨터공학과 기준인가요?", "axes": ["P", "T"], "need_profile_fields": ["admission_year"], "need_evidence_types": ["규정", "교육과정"], "expect": "C", "gold_doc_ids": [], "gold_answer": null, "note": "개편 시 경과조치가 명시돼 있는지에 따라 갈림. 없으면 확정불가가 정답"}
+{"id": "Q35", "q": "컴퓨터공학전공이랑 컴퓨터공학과가 다른 건가요?", "axes": ["T"], "need_profile_fields": [], "need_evidence_types": ["공지", "안내"], "expect": "A", "gold_doc_ids": [], "gold_answer": null, "note": "같은 조직의 개편 전/후 명칭. 검색이 두 이름을 연결하지 못하면 실패"}
