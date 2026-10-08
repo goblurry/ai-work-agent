@@ -1,0 +1,25 @@
+{
+  "inquiry_id": "INQ-2026-0002",
+  "branch": "B_need_info",
+  "draft": null,
+  "evidence": [
+    {
+      "chunk_id": "GUIDE-DOUBLE-003",
+      "url": "https://www.ewha.ac.kr/ewha/academics/double.do",
+      "article": "복수전공 안내 · 이수요건",
+      "quote": "복수전공 이수요건은 복수전공으로 선택한 학과의 교육과정을 따른다.",
+      "why_applicable": "현재 유효한 안내. 다만 상대 전공이 확정되어야 학점을 특정할 수 있음"
+    }
+  ],
+  "ask_student": [
+    "복수전공으로 신청하려는 상대 전공이 어디인지",
+    "현재 복수전공을 이미 이수 중인지 여부"
+  ],
+  "undetermined": null,
+  "trace": [
+    { "step": "의도분류", "detail": "retrieval 질의로 분류", "hits": 0 },
+    { "step": "학생조건확인", "detail": "학번 2024xxxx → 입학연도 2024, 컴퓨터공학과, 재학", "hits": 0 },
+    { "step": "자료검색", "detail": "입학연도 2024 · 기준일 2026-10-08", "hits": 9 },
+    { "step": "적용조건검증", "detail": "상대 전공 미상 → 이수학점 특정 불가", "hits": 1 }
+  ]
+}
