@@ -1,0 +1,64 @@
+{
+  "collection": "ewha_undergraduate_v5_full_7dca11224706",
+  "points_count": 17889,
+  "vectors": {
+    "bge_m3_dense": {
+      "size": 1024,
+      "distance": "Cosine"
+    }
+  },
+  "sparse_vectors": {
+    "bge_m3_sparse": {}
+  },
+  "payload_schema": {
+    "applicability.student_status.status": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "applicability.department.status": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "applicability.admission_year.status": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "chunk_id": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "applicability.student_status.values": {
+      "data_type": "keyword",
+      "points": 26
+    },
+    "doc_id": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "ingestion_status": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "source_type": {
+      "data_type": "keyword",
+      "points": 17889
+    },
+    "applicability.admission_year.to": {
+      "data_type": "integer",
+      "points": 344
+    },
+    "applicability.admission_year.from": {
+      "data_type": "integer",
+      "points": 501
+    },
+    "applicability.department.values": {
+      "data_type": "keyword",
+      "points": 1240
+    }
+  },
+  "stored_vector_query_verified": true,
+  "natural_language_query_verified": true,
+  "query_embedding_model": "BAAI/bge-m3",
+  "query_embedding_revision": "5617a9f61b028005a4858fdac845db406aefb181",
+  "sample_reembedding_cosine": 0.999999
+}

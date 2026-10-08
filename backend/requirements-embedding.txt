@@ -1,0 +1,3 @@
+# 로컬 BGE-M3 질문 임베딩
+FlagEmbedding>=1.3,<2
+transformers>=4.44,<5
