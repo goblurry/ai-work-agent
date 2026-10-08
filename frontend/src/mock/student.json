@@ -1,0 +1,14 @@
+{
+  "student_id": "2021XXXX",
+  "verified": true,
+  "admission_year": 2021,
+  "department": "컴퓨터공학전공 (엘텍공과대학 소프트웨어학부)",
+  "level": "학부",
+  "major_type": "주전공",
+  "student_status": "재학",
+  "grade": 4,
+  "transfer_in": false,
+  "leave_terms": 2,
+  "credits": { "total": 112, "major_required": 33, "major_elective": 21, "general": 58 },
+  "certifications": { "영어인증": "충족", "정보인증": "미충족" }
+}

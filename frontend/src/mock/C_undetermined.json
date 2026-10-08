@@ -1,0 +1,41 @@
+{
+  "inquiry_id": "INQ-2026-0003",
+  "branch": "C_undetermined",
+  "draft": null,
+  "evidence": [
+    {
+      "chunk_id": "NOTICE-2024-REORG-001",
+      "url": "https://www.ewha.ac.kr/ewha/news/notice.do?id=2024reorg",
+      "article": "2024학년도 학제개편 안내",
+      "quote": "소프트웨어학부 컴퓨터공학전공은 인공지능대학 컴퓨터공학과로 개편한다.",
+      "why_applicable": "개편 사실은 확인되나, 기존 입학생 적용 기준이 본문에 없음"
+    },
+    {
+      "chunk_id": "CUR-2024-CSE-001",
+      "url": "https://www.ewha.ac.kr/ewha/academics/curriculum.do?year=2024",
+      "article": "2024학년도 교육과정 · 졸업요건",
+      "quote": "본 교육과정은 2024학년도 입학자부터 적용한다.",
+      "why_applicable": "2022학번에 대한 명시적 언급이 없어 적용 여부 불명"
+    }
+  ],
+  "ask_student": null,
+  "undetermined": {
+    "reason": "자료충돌",
+    "conflicts": [
+      { "chunk_id": "NOTICE-2024-REORG-001", "claim": "개편 후 조직은 인공지능대학 컴퓨터공학과" },
+      { "chunk_id": "CUR-2024-CSE-001", "claim": "2024학년도 교육과정은 2024학번부터 적용" }
+    ],
+    "next_actions": [
+      "2024 학제개편 공지의 부칙·경과조치 원문 확인",
+      "컴퓨터공학과 사무실에 기존 입학생 적용 기준 확인",
+      "학사지원팀에 개편 시 졸업요건 승계 여부 질의"
+    ]
+  },
+  "trace": [
+    { "step": "의도분류", "detail": "retrieval 질의로 분류", "hits": 0 },
+    { "step": "학생조건확인", "detail": "학번 2022xxxx → 입학연도 2022, 컴퓨터공학전공(개편 전), 재학", "hits": 0 },
+    { "step": "자료검색", "detail": "입학연도 2022 · 개편 전후 자료 병합 검색", "hits": 21 },
+    { "step": "적용조건검증", "detail": "경과조치 조문 미발견 → 자동 선택하지 않음", "hits": 2 },
+    { "step": "재검색", "detail": "부칙·경과조치 키워드로 범위 확대", "hits": 0 }
+  ]
+}
