@@ -55,6 +55,12 @@
 
 모르는 값은 `null`, 해당하지 않는 항목은 생략합니다. 문의 대상 전공 학과가 있으면 그 학과로 검색합니다.
 
+## 업무 DB
+
+`DATABASE_URL`에 PostgreSQL 연결 문자열을 설정하면 계정·세션·문의를 해당 DB에 저장합니다. Supabase에서는 Connect → Session pooler(5432)의 연결 문자열을 사용합니다. 미설정 시 로컬 SQLite를 사용합니다. 원격 연결은 TLS를 사용하며 시작 시 테이블을 생성합니다.
+
+기존 SQLite 자료를 옮기려면 서버를 중지하고 `backend/scripts/migrate_inquiries.py`를 실행합니다. 계정과 문의를 보존하고 로그인 세션은 새로 발급합니다. 동일 ID는 건너뛰며 다른 계정과 충돌하면 전체 작업을 취소합니다.
+
 ## 실행
 
 저장소 루트에서 실행합니다. `.env`는 `backend/.env.example`을 참고해 설정합니다.

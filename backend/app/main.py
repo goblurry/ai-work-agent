@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Literal
 import json
 import os
-import sqlite3
 from uuid import uuid4
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from .database import Database
 from .auth import Auth
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from .intake import InquiryType, InquiryDetails
@@ -85,20 +85,17 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
     write_reply = reply_writer
     path = Path(db_path or os.getenv('INQUIRY_DB_PATH', str(ROOT / 'data' / 'inquiries.sqlite3')))
 
-    def connect():
-        conn = sqlite3.connect(path, timeout=10)
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.execute('CREATE TABLE IF NOT EXISTS inquiries (id TEXT PRIMARY KEY, body TEXT NOT NULL)')
-        return conn
+    database = Database(path, None if db_path is not None else os.getenv('DATABASE_URL') or None)
+    connect = database.connect
 
     auth = Auth(connect)
 
     @asynccontextmanager
     async def lifespan(app):
-        path.parent.mkdir(parents=True, exist_ok=True)
         auth.initialize()
+        database.initialize_inquiries()
         with connect() as conn:
-            columns = {row[1] for row in conn.execute('PRAGMA table_info(inquiries)')}
+            columns = conn.columns('inquiries')
             if 'receipt_no' not in columns:
                 conn.execute('ALTER TABLE inquiries ADD COLUMN receipt_no TEXT')
             if 'student_id' not in columns:
@@ -117,7 +114,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
             conn.execute('CREATE INDEX IF NOT EXISTS inquiries_student_id ON inquiries(student_id)')
         yield
 
-    app = FastAPI(title='학사 행정 Agent', version='0.5.0', lifespan=lifespan,
+    app = FastAPI(title='학사 행정 Agent', version='0.6.0', lifespan=lifespan,
                   description='수업 시연용 MVP입니다. 학생 웹 접수 또는 담당자 전화 접수 → 담당자 Agent 실행 → 정보 보완 → 답변 확정 순서로 처리합니다. 학생 API는 확정된 답변만 제공합니다. 학생은 자신의 문의만 조회하며 담당자 API는 직원 계정으로만 이용합니다. API 키는 서버 설정에서 읽습니다.')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if v.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET','POST'], allow_headers=['Content-Type'], allow_credentials=True)

@@ -3,7 +3,6 @@ import hashlib
 import hmac
 import os
 import secrets
-import sqlite3
 import time
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -50,11 +49,16 @@ class Auth:
         if self.same_site not in ('lax', 'strict', 'none') or (self.same_site == 'none' and not self.secure):
             raise ValueError('COOKIE_SAMESITE는 lax/strict/none이며 none은 COOKIE_SECURE=true가 필요합니다.')
 
-    def initialize(self):
+    def initialize(self, seed=True):
         with self.connect() as db:
             db.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('student','staff')))")
-            db.execute('CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at REAL NOT NULL)')
+            db.execute('CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at DOUBLE PRECISION NOT NULL)')
             db.execute('DELETE FROM sessions WHERE expires_at <= ?', (time.time(),))
+            if db.postgres:
+                db.execute('ALTER TABLE users ENABLE ROW LEVEL SECURITY')
+                db.execute('ALTER TABLE sessions ENABLE ROW LEVEL SECURITY')
+        if not seed:
+            return
         for role in ('student', 'staff'):
             password = os.getenv(f'DEMO_{role.upper()}_PASSWORD')
             if password:

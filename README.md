@@ -21,6 +21,15 @@
 
 ## 기술 구성
 
-FastAPI · SQLite · Qdrant · BGE-M3 · OpenAI API
+| 구분 | 기술 | 용도 |
+|---|---|---|
+| 프론트엔드 | React | 학생 문의·행정 담당자 화면 |
+| 백엔드·Agent | Python · FastAPI | 문의 처리 API·검색 및 답변 작성 흐름 |
+| 업무 DB | PostgreSQL(Supabase) | 계정·세션·문의·답변·처리 기록 |
+| 문서 검색 | Qdrant Cloud · BGE-M3 | 문서·질문 임베딩 및 관련 근거 검색 |
+| 답변 생성 | OpenAI API | 근거와 담당자 판단을 반영한 초안 작성 |
+| 백엔드 배포 | Hugging Face Docker Spaces | API·임베딩 모델 실행 |
+
+업무 DB는 Supabase PostgreSQL에 연결합니다. 로컬 테스트에서는 SQLite도 사용할 수 있습니다. Hugging Face 배포는 준비 중입니다.
 
 실행 방법과 주요 API는 [백엔드 README](backend/README.md)를 참고하세요.
