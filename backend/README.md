@@ -90,3 +90,21 @@ fetch(`${API_URL}/auth/login`, {
 ```
 
 로컬에서는 프론트와 API 주소의 호스트를 통일합니다(`127.0.0.1` 또는 `localhost`). HTTPS 배포 시 `COOKIE_SECURE=true`로 설정하고, 프론트와 API가 서로 다른 사이트이면 `COOKIE_SAMESITE=none` 및 정확한 `CORS_ORIGINS`를 설정합니다.
+
+## Hugging Face 배포
+
+Docker Space: [goblurry/academic-ai-agent](https://huggingface.co/spaces/goblurry/academic-ai-agent)
+
+- CPU Basic, 포트 7860. BGE-M3는 이미지 빌드 시 지정 버전으로 내려받습니다.
+- 계정·문의는 Supabase PostgreSQL에 저장합니다. 학수번호 검색 인덱스는 시작 시 Qdrant에서 재생성합니다.
+- `.env`에 Space 쓰기 권한을 가진 `HF_TOKEN`을 설정하고 아래 명령으로 코드와 Secrets를 올립니다.
+
+```bash
+.venv/bin/python backend/deploy/upload.py goblurry/academic-ai-agent
+```
+
+Secrets: `DATABASE_URL`, `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_COLLECTION`, `OPENAI_API_KEY`, `DEMO_STUDENT_USERNAME`, `DEMO_STUDENT_PASSWORD`, `DEMO_STAFF_USERNAME`, `DEMO_STAFF_PASSWORD`.
+
+Variables: `OPENAI_MODEL`, `CORS_ORIGINS`. 프론트 배포 후 정확한 프론트 주소를 `CORS_ORIGINS`에 추가합니다. DB 비밀번호 변경은 기존 계정에 자동 반영되지 않습니다.
+
+배포용 README는 `backend/deploy/space.README.md`를 사용합니다. 키·DB·로컬 모델 파일은 업로드하지 않습니다. Secrets 값은 서버 환경변수로 전달됩니다.

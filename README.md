@@ -30,6 +30,11 @@
 | 답변 생성 | OpenAI API | 근거와 담당자 판단을 반영한 초안 작성 |
 | 백엔드 배포 | Hugging Face Docker Spaces | API·임베딩 모델 실행 |
 
-업무 DB는 Supabase PostgreSQL에 연결합니다. 로컬 테스트에서는 SQLite도 사용할 수 있습니다. Hugging Face 배포는 준비 중입니다.
+업무 DB는 Supabase PostgreSQL에 연결합니다. 로컬 테스트에서는 SQLite도 사용할 수 있습니다. 백엔드는 Hugging Face Docker Spaces에 배포합니다.
 
 실행 방법과 주요 API는 [백엔드 README](backend/README.md)를 참고하세요.
+
+## 배포 주소
+
+- [API 문서·시연](https://goblurry-academic-ai-agent.hf.space/docs)
+- [서버 상태](https://goblurry-academic-ai-agent.hf.space/health)
