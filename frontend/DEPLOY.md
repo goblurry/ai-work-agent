@@ -5,7 +5,21 @@ API 가이드 7장을 그대로 따릅니다. **동일 출처 프록시** 방식
 Vite 의 `server.proxy` 는 개발 전용이라 `npm run build` 결과에 포함되지 않습니다.
 정적 호스팅에 파일만 올리면 `/api` 가 연결되지 않고, 쿠키 인증도 동작하지 않습니다.
 
-## Vercel (권장)
+## Netlify (권장)
+
+저장소가 **조직(snu-sng) 소유**라 Vercel 무료 플랜으로는 배포되지 않습니다.
+Vercel 은 조직 저장소에 Team(유료) 플랜을 요구합니다. Netlify 는 조직 저장소도 무료입니다.
+
+`frontend/netlify.toml` 을 올려 두었습니다. 설정은 이것뿐입니다.
+
+1. https://app.netlify.com/signup 에서 **GitHub 로 로그인**
+2. **Add new site → Import an existing project → GitHub**
+3. `snu-sng/ai-work-agent` 선택
+4. 빌드 설정은 `netlify.toml` 이 지정하므로 **그대로 두고 Deploy**
+
+`base`, `command`, `publish` 가 파일에 있어서 화면에서 따로 바꿀 것이 없습니다.
+
+## Vercel (개인 저장소일 때)
 
 `frontend/vercel.json` 을 같이 올려 두었습니다. 설정은 이것뿐입니다.
 
