@@ -32,7 +32,9 @@ export default function InquiryRow({ item, onOpen }) {
         <p className="staff-row-question">{summarize(item.question)}</p>
         <div className="staff-row-meta">
           {meta && <span>{meta}</span>}
-          {item.receipt_no && <span>접수번호 {item.receipt_no}</span>}
+          {item.channel === "web" && item.receipt_no && (
+            <span>접수번호 {item.receipt_no}</span>
+          )}
         </div>
       </button>
     </li>
