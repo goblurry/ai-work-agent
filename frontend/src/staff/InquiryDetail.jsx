@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { post, request } from "../shared/api";
 import Icon from "../shared/Icon";
+import InquiryManagement from "../shared/InquiryManagement";
 import {
   CHANNEL_LABEL,
   FIELD_LABEL,
@@ -113,6 +114,8 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
           목록으로
         </button>
         {error && <p className="staff-error">{error}</p>}
+
+
       </>
     );
 
@@ -186,6 +189,10 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       </div>
 
       {error && <p className="staff-error">{error}</p>}
+      <InquiryManagement key={inquiryId} item={item} path={`/inquiries/${inquiryId}`}
+        canManage={!locked && item.status !== "processing" && !action}
+        onUpdated={(next)=>{setItem(next);setDraft("");setChoice("");setMemo("");setJudgement("");setDirty(false);onChanged?.()}}
+        onDeleted={()=>{onChanged?.();onBack()}} />
 
       <section className="staff-panel">
         <div className="staff-panel-head">

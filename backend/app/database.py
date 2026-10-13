@@ -13,6 +13,7 @@ class Connection:
         if self.postgres:
             sql = sql.replace("json_extract(body, '$.channel')", "(body::jsonb ->> 'channel')")
             sql = sql.replace('ORDER BY rowid DESC', "ORDER BY (body::jsonb ->> 'created_at') DESC, id DESC")
+            sql = sql.replace("json_extract(inquiries.body, '$.status')", "(inquiries.body::jsonb ->> 'status')")
             sql = sql.replace('?', '%s')
         return self.raw.execute(sql, params)
 

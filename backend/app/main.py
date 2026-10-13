@@ -117,7 +117,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
     app = FastAPI(title='학사 행정 Agent', version='0.6.0', lifespan=lifespan,
                   description='수업 시연용 MVP입니다. 학생 웹 접수 또는 담당자 전화 접수 → 담당자 Agent 실행 → 정보 보완 → 답변 확정 순서로 처리합니다. 학생 API는 확정된 답변만 제공합니다. 학생은 자신의 문의만 조회하며 담당자 API는 직원 계정으로만 이용합니다. API 키는 서버 설정에서 읽습니다.')
     origins = [v.strip() for v in os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',') if v.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET','POST'], allow_headers=['Content-Type'], allow_credentials=True)
+    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=['GET','POST','PUT','DELETE'], allow_headers=['Content-Type'], allow_credentials=True)
 
     app.state.auth = auth
     app.include_router(auth.router())
@@ -135,13 +135,18 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
             row = conn.execute('SELECT body FROM inquiries WHERE id=?', (inquiry_id,)).fetchone()
         if row is None:
             raise HTTPException(404, '문의를 찾을 수 없습니다.')
-        return json.loads(row[0])
+        record = json.loads(row[0])
+        if record.get('status') == 'deleted':
+            raise HTTPException(404, '문의를 찾을 수 없습니다.')
+        return record
 
     def save(record):
         record['updated_at'] = datetime.now(timezone.utc).isoformat()
         with connect() as conn:
-            conn.execute('INSERT INTO inquiries(id, body, receipt_no, student_id) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET body=excluded.body, receipt_no=excluded.receipt_no, student_id=excluded.student_id',
+            cursor = conn.execute("INSERT INTO inquiries(id, body, receipt_no, student_id) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET body=excluded.body, receipt_no=excluded.receipt_no, student_id=excluded.student_id WHERE json_extract(inquiries.body, '$.status') != 'deleted'",
                          (record['inquiry_id'], json.dumps(record, ensure_ascii=False),record['receipt_no'],record.get('student_id')))
+            if cursor.rowcount != 1:
+                raise HTTPException(409, '삭제된 문의는 변경할 수 없습니다.')
         return record
 
     @app.get('/health', summary='서버 상태 확인', description='서버 응답과 설정 여부를 확인합니다. 외부 서비스 접속 성공을 검사하는 기능은 아닙니다.', tags=['상태'])
@@ -169,6 +174,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
                   'needs_review':'담당자 확인 중','completed':'답변 완료'}
         return {key:record.get(key) for key in
                 ('receipt_no','question','inquiry_type','details','profile','target_term','as_of','created_at','updated_at','information_request')} | {
+            'can_manage': record['status'] not in ('completed','processing','deleted'),
             'status':labels.get(record['status'],'담당자 확인 중'),
             'final_answer':record.get('final_answer') if record['status']=='completed' else None}
 
@@ -178,10 +184,13 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
                              (receipt_no,student_id,'web')).fetchone()
         if row is None:
             raise HTTPException(404,'접수번호에 해당하는 웹 문의를 찾을 수 없습니다.')
-        return json.loads(row[0])
+        record = json.loads(row[0])
+        if record.get('status') == 'deleted':
+            raise HTTPException(404, '문의를 찾을 수 없습니다.')
+        return record
 
     def ensure_open(record):
-        if record['status'] in ('completed','processing'):
+        if record['status'] in ('completed','processing','deleted'):
             raise HTTPException(409,'완료되었거나 처리 중인 문의는 변경할 수 없습니다.')
 
     def supplement(record, payload):
@@ -208,6 +217,55 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
         record['trace'].append({'step':'정보보완','detail':'조건을 보완했습니다. 담당자 재실행을 기다립니다.'})
         return save(record)
 
+    def replace_record(record, updated):
+        # Compare the saved version so concurrent execution/completion cannot be overwritten.
+        previous = json.dumps(record, ensure_ascii=False)
+        updated['updated_at'] = datetime.now(timezone.utc).isoformat()
+        with connect() as conn:
+            result = conn.execute('UPDATE inquiries SET body=? WHERE id=? AND body=?',
+                                  (json.dumps(updated, ensure_ascii=False), record['inquiry_id'], previous))
+            if result.rowcount != 1:
+                raise HTTPException(409, '문의 상태가 변경되었습니다. 새로고침 후 다시 시도해 주세요.')
+        return updated
+
+    def edit_inquiry(record, payload):
+        from copy import deepcopy
+        ensure_open(record)
+        updated = deepcopy(record)
+        updated.update(payload.model_dump(mode='json'))
+        for field in ('draft','final_answer','completed_at','support_summary','staff_decision',
+                      'staff_choice','staff_memo','draft_kind','information_request','unresolved_reason','course_lookup'):
+            updated[field] = None
+        updated.update(status='received', evidence=[], missing_fields=[], warnings=[],
+                       next_actions=['수정된 문의로 Agent를 다시 실행해 주세요.'])
+        updated['trace'].append({'step':'문의수정','detail':'문의와 조건을 수정했습니다. 기존 검색 결과와 초안을 초기화했습니다.'})
+        return replace_record(record, updated)
+
+    def withdraw_inquiry(record):
+        from copy import deepcopy
+        ensure_open(record)
+        updated = deepcopy(record)
+        updated.update(status='deleted', deleted_at=datetime.now(timezone.utc).isoformat())
+        updated['trace'].append({'step':'문의삭제','detail':'문의 목록에서 삭제했습니다.'})
+        replace_record(record, updated)
+        return {'deleted': True}
+
+    @app.put('/students/inquiries/{receipt_no}', summary='학생 · 본인 미처리 문의 수정', tags=['학생'])
+    def student_edit(receipt_no: str, payload: NewInquiry, user=Depends(auth.require_student)):
+        return student_view(edit_inquiry(get_by_receipt(receipt_no,user['id']), payload))
+
+    @app.delete('/students/inquiries/{receipt_no}', summary='학생 · 본인 미처리 문의 삭제', tags=['학생'])
+    def student_delete(receipt_no: str, user=Depends(auth.require_student)):
+        return withdraw_inquiry(get_by_receipt(receipt_no,user['id']))
+
+    @app.put('/inquiries/{inquiry_id}', summary='담당자 · 미완료 문의 수정', tags=['담당자'], dependencies=[Depends(auth.require_staff)])
+    def staff_edit(inquiry_id: str, payload: NewInquiry):
+        return edit_inquiry(get_record(inquiry_id), payload)
+
+    @app.delete('/inquiries/{inquiry_id}', summary='담당자 · 미완료 문의 삭제', tags=['담당자'], dependencies=[Depends(auth.require_staff)])
+    def staff_delete(inquiry_id: str):
+        return withdraw_inquiry(get_record(inquiry_id))
+
     @app.get('/materials/courses/{course_code}', summary='담당자 · 학수번호 정확 조회',
              description='수집된 본문에서 학수번호를 정확히 찾습니다. 과목 대체 인정이나 졸업 가능 여부를 판정하는 기능은 아닙니다.',tags=['보조'], include_in_schema=False, dependencies=[Depends(auth.require_staff)])
     def lookup_course(course_code: str, department: str | None = None, admission_year: int | None = None, major_track: str | None = None):
@@ -226,7 +284,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
     def student_list(user=Depends(auth.require_student)):
         with connect() as conn:
             rows = conn.execute("SELECT body FROM inquiries WHERE student_id=? AND json_extract(body, '$.channel')='web' ORDER BY rowid DESC", (user['id'],)).fetchall()
-        return [student_view(json.loads(row[0])) for row in rows]
+        return [student_view(json.loads(row[0])) for row in rows if json.loads(row[0]).get('status') != 'deleted']
 
     @app.get('/students/inquiries/{receipt_no}', summary='학생 · 접수번호로 문의·최종 답변 조회',
              description='시연용 접수번호 조회입니다. 내부 초안·검색 근거·실행 기록은 반환하지 않습니다.',tags=['학생'])
@@ -256,9 +314,11 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
             record = supplement(record, payload)
         if record['status']=='waiting_student':
             raise HTTPException(409,'학생의 정보 보완을 기다리고 있습니다.')
-        record['status']='processing'
-        record['trace'].append({'step':'Agent실행','detail':'담당자가 Agent 실행을 요청했습니다.'})
-        save(record)
+        from copy import deepcopy
+        running = deepcopy(record)
+        running['status']='processing'
+        running['trace'].append({'step':'Agent실행','detail':'담당자가 Agent 실행을 요청했습니다.'})
+        record = replace_record(record, running)
         return save(process(record))
 
     @app.post('/inquiries/{inquiry_id}/request-info', summary='담당자 · 정보 보완 요청 확정',
@@ -277,7 +337,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
     def list_inquiries():
         with connect() as conn:
             rows = conn.execute('SELECT body FROM inquiries ORDER BY rowid DESC').fetchall()
-        return [json.loads(row[0]) for row in rows]
+        return [json.loads(row[0]) for row in rows if json.loads(row[0]).get('status') != 'deleted']
 
     @app.get('/inquiries/{inquiry_id}', summary='담당자 · 문의 상세·실행 기록 조회', tags=['담당자'], dependencies=[Depends(auth.require_staff)])
     def read_inquiry(inquiry_id: str):
@@ -293,7 +353,9 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
     @app.post('/inquiries/{inquiry_id}/compose', summary='담당자 · 판단을 학생 답변 초안으로 작성',
               description='choice(yes/no/check)와 선택 메모를 입력합니다. 생성된 draft를 검토한 뒤 /review의 complete로 확정합니다.', tags=['담당자'], dependencies=[Depends(auth.require_staff)])
     def compose_reply(inquiry_id: str, payload: ComposeReply):
+        from copy import deepcopy
         record=get_record(inquiry_id)
+        original=deepcopy(record)
         ensure_open(record)
         if record['status']=='waiting_student':
             raise HTTPException(409,'학생 정보 보완을 기다리고 있습니다.')
@@ -328,7 +390,7 @@ def create_app(db_path: str | Path | None = None, processor=None, reply_writer=g
         record.update(staff_decision=decision,staff_choice=payload.choice,staff_memo=payload.memo.strip(),draft=text.strip(),draft_kind='student_reply',status='needs_review',
                       next_actions=['작성된 안내문을 확인·수정한 뒤 /review에서 complete로 확정해 주세요.'])
         record['trace'].append({'step':'학생답변작성','detail':'담당자 판단과 근거로 안내문 초안을 작성했습니다. 아직 확정되지 않았습니다.'})
-        return save(record)
+        return replace_record(original, record)
 
     @app.post('/inquiries/{inquiry_id}/review', summary='담당자 · 초안 저장·최종 답변 확정', description='edit는 내부 초안만 저장합니다. complete는 최종 답변으로 확정하며 웹 문의의 학생 조회에 표시합니다. 전화 문의는 통화 안내를 완료한 것으로 기록합니다.', tags=['담당자'], dependencies=[Depends(auth.require_staff)])
     def review_inquiry(inquiry_id: str, payload: ReviewInquiry):

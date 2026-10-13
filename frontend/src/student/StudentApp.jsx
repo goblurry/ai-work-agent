@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { request, post } from "../shared/api";
 import Icon from "../shared/Icon";
+import InquiryManagement from "../shared/InquiryManagement";
 
 const TYPES = [
   {
@@ -968,6 +969,10 @@ export default function StudentApp({ onAuthChange } = {}) {
                 </form>
               </div>
             )}
+            <InquiryManagement key={selected.receipt_no} item={selected}
+              path={"/students/inquiries/" + selected.receipt_no} canManage={selected.can_manage}
+              onUpdated={(next)=>{setSelected(next);loadList()}}
+              onDeleted={()=>{setSelected(null);loadList()}} />
             <div className="detail-receipt">
               접수번호 <code>{selected.receipt_no}</code>
             </div>
