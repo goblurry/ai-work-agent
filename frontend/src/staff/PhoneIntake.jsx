@@ -60,6 +60,14 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
   const [savedId, setSavedId] = useState(null);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  // 저장이 끝난 뒤에는 입력을 잠근다. 내용을 고쳐도 저장된 문의에는 반영되지
+  // 않으므로, 고친 내용으로 실행된 것처럼 보이면 안 된다.
+  const savedLock = Boolean(savedId);
+  function startNew() {
+    setSavedId(null);
+    setForm({ ...EMPTY });
+    setError("");
+  }
   const phone = items.filter((i) => i.channel === "phone");
   const type = form.inquiry_type;
 
@@ -144,6 +152,10 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
           {savedId && <span className="staff-count">저장됨 · 실행 대기</span>}
         </div>
         <form className="staff-panel-body" onSubmit={submit}>
+          <fieldset
+            disabled={savedLock}
+            style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
+          >
           <div className="staff-form-grid">
             <Field label="문의 유형">
               <select value={type} onChange={set("inquiry_type")}>
@@ -277,24 +289,35 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
               />
             </Field>
           </div>
+          </fieldset>
 
           <div className="staff-button-row" style={{ marginTop: 16 }}>
             <button type="submit" className="staff-action" disabled={busy}>
               {busy ? "처리 중" : savedId ? "다시 실행" : "저장하고 근거 확인"}
             </button>
             {savedId && (
-              <button
-                type="button"
-                className="staff-text-button"
-                onClick={() => onCreated.open(savedId)}
-              >
-                저장된 문의 열기
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="staff-text-button"
+                  onClick={() => onCreated.open(savedId)}
+                >
+                  저장된 문의 열기
+                </button>
+                <button
+                  type="button"
+                  className="staff-text-button"
+                  onClick={startNew}
+                >
+                  새 문의 작성
+                </button>
+              </>
             )}
           </div>
           <p className="staff-hint">
-            접수 후 바로 근거를 확인합니다. 전화 문의는 학생 계정에 연결되지 않으며
-            통화 처리 기록으로 남습니다.
+            {savedLock
+              ? "이미 접수된 문의입니다. 실행만 다시 시도하며, 내용을 바꾸려면 저장된 문의를 열거나 새 문의를 작성해 주세요."
+              : "접수 후 바로 근거를 확인합니다. 전화 문의는 학생 계정에 연결되지 않으며 통화 처리 기록으로 남습니다."}
           </p>
         </form>
       </section>
