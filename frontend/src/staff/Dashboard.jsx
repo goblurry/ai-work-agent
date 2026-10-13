@@ -1,5 +1,6 @@
+import Icon from "../shared/Icon";
 import InquiryRow from "./InquiryRow";
-import { seoulDate, summarize, todayLabel, todaySeoul, dateTime } from "./common";
+import { seoulDate, summarize, todaySeoul, dateTime } from "./common";
 
 export default function Dashboard({ items, loading, onOpen, onReload, onPhone }) {
   const today = todaySeoul();
@@ -18,18 +19,18 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
     .slice(0, 5);
 
   const counts = [
-    ["미처리", pending.length],
-    ["학생 보완 대기", waiting.length],
-    ["오늘 답변 완료", doneToday.length],
-    ["오늘 접수", newToday.length],
+    ["미처리", pending.length, "other"],
+    ["학생 보완 대기", waiting.length, "clock"],
+    ["오늘 답변 완료", doneToday.length, "check"],
+    ["오늘 접수", newToday.length, "plus"],
   ];
 
   return (
-    <>
+    <div className="staff-dashboard">
       <div className="staff-page-top">
         <div>
-          <h1 className="staff-title">대시보드</h1>
-          <p className="staff-today">{todayLabel()}</p>
+          <h1 className="staff-title">{today.replaceAll("-", ".")}</h1>
+          <p className="staff-today">오늘의 업무</p>
         </div>
         <button type="button" className="staff-action" onClick={onPhone}>
           전화 문의 접수
@@ -37,9 +38,9 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
       </div>
 
       <dl className="staff-summary">
-        {counts.map(([label, value]) => (
+        {counts.map(([label, value, icon]) => (
           <div key={label}>
-            <dt>{label}</dt>
+            <dt><span>{label}</span><Icon name={icon} size={18} /></dt>
             <dd className={value === 0 ? "zero" : ""}>{value}</dd>
           </div>
         ))}
@@ -61,11 +62,15 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
           ) : pending.length ? (
             <ul className="staff-rows">
               {pending.map((item) => (
-                <InquiryRow key={item.inquiry_id} item={item} onOpen={onOpen} />
+                <InquiryRow key={item.inquiry_id} item={item} onOpen={onOpen} showChannel />
               ))}
             </ul>
           ) : (
-            <p className="staff-empty">답변을 기다리는 문의가 없습니다.</p>
+            <div className="staff-dashboard-empty">
+              <span className="staff-dashboard-check"><Icon name="check" size={28} /></span>
+              <strong>답변을 기다리는 문의가 없습니다</strong>
+              <p>새로 접수되는 문의는 이곳에서 확인할 수 있습니다.</p>
+            </div>
           )}
         </section>
 
@@ -77,13 +82,18 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
             <ul className="staff-recent">
               {recent.map((item) => (
                 <li key={item.inquiry_id}>
-                  <div className="staff-recent-time">
-                    {dateTime(item.completed_at)}
-                  </div>
-                  <p className="staff-recent-q">{summarize(item.question, 48)}</p>
-                  <p className="staff-recent-a">
-                    {summarize(item.final_answer, 110)}
-                  </p>
+                  <button
+                    type="button"
+                    className="staff-recent-open"
+                    onClick={() => onOpen(item.inquiry_id)}
+                    aria-label={`등록한 답변 보기: ${summarize(item.question, 48)}`}
+                  >
+                    <span className="staff-recent-content">
+                      <span className="staff-recent-q">{item.question}</span>
+                      <span className="staff-recent-time">{dateTime(item.completed_at)} 등록</span>
+                    </span>
+                    <span className="staff-recent-arrow" aria-hidden="true">→</span>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -92,6 +102,6 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
           )}
         </section>
       </div>
-    </>
+    </div>
   );
 }
