@@ -19,9 +19,6 @@ const CHOICE_FALLBACK = { yes: "예", no: "아니요", check: "추가 확인 필
 
 function Evidence({ item }) {
   const url = safeUrl(item?.source_url);
-  const bits = [item?.chunk_id, item?.verification].filter(
-    (v) => typeof v === "string" && v,
-  );
   return (
     <article className="staff-evidence">
       <div className="staff-evidence-top">
@@ -34,65 +31,8 @@ function Evidence({ item }) {
           </a>
         )}
       </div>
-      {item?.text && <p className="staff-evidence-text">{item.text}</p>}
-      {bits.length > 0 && <p className="staff-evidence-meta">{bits.join(" · ")}</p>}
+      {item?.page != null && <span className="staff-evidence-meta">{item.page}쪽</span>}
     </article>
-  );
-}
-
-function SupportSummary({ summary }) {
-  if (!summary) return null;
-  const courses = asList(summary.confirmed_courses);
-  const unverified = asList(summary.unverified_items);
-  const sources = asList(summary.sources);
-  if (!courses.length && !unverified.length && !sources.length) return null;
-  return (
-    <section className="staff-section">
-      <h3>확인된 정보</h3>
-      {courses.length > 0 && (
-        <ul className="staff-rows" style={{ border: "1px solid var(--line)", borderRadius: 6 }}>
-          {courses.map((c, i) => (
-            <li key={c?.course_code || i} style={{ padding: "11px 14px" }}>
-              <div className="staff-row-top" style={{ marginBottom: 2 }}>
-                <span className="staff-row-type">
-                  {c?.course_name || "과목명 미상"}
-                </span>
-                {c?.course_code && <span className="staff-chip">{c.course_code}</span>}
-                {c?.required_flag && <span className="staff-chip phone">필수</span>}
-              </div>
-              <div className="staff-row-meta">
-                {c?.category && <span>{c.category}</span>}
-                {c?.credits != null && <span>{c.credits}학점</span>}
-                {c?.major_track && <span>{c.major_track}</span>}
-                {c?.page != null && <span>{c.page}쪽</span>}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      {unverified.length > 0 && (
-        <div className="staff-note warn" style={{ marginTop: 10 }}>
-          <strong>확인되지 않은 항목</strong>
-          <ul>
-            {unverified.map((u, i) => (
-              <li key={i}>{typeof u === "string" ? u : JSON.stringify(u)}</li>
-            ))}
-          </ul>
-          <p className="staff-hint" style={{ marginTop: 6 }}>
-            자료에서 확인되지 않았다는 뜻이며 불가 판정이 아닙니다.
-          </p>
-        </div>
-      )}
-      {sources.length > 0 && (
-        <p className="staff-evidence-meta" style={{ marginTop: 8 }}>
-          출처 ·{" "}
-          {sources
-            .map((s) => (typeof s === "string" ? s : s?.title || s?.file || ""))
-            .filter(Boolean)
-            .join(", ")}
-        </p>
-      )}
-    </section>
   );
 }
 
@@ -170,10 +110,13 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
   const options = asList(question?.options);
   const labels = asList(question?.labels);
   const evidence = asList(item.evidence);
+  const sources = evidence.filter((source, index, all) =>
+    all.findIndex((other) => other?.title === source?.title &&
+      other?.source_url === source?.source_url && other?.page === source?.page) === index,
+  );
   const missing = asList(item.missing_fields);
   const warnings = asList(item.warnings);
   const next = asList(item.next_actions);
-  const trace = asList(item.trace);
   const profile = item.profile || {};
   const details = item.details || {};
   const canRun = !locked && item.status !== "waiting_student";
@@ -195,6 +138,16 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
     ["대상 학기", item.target_term],
   ].filter((row) => row && row[1] != null && row[1] !== "");
 
+  const groups = [
+    { title: "학생 정보", rows: metaRows.filter(([label]) => ["학과", "입학연도", "전공 구분", "학적 상태"].includes(label)) },
+    { title: "문의 조건", rows: [
+      ...metaRows.filter(([label]) => ["대상 학과", "대상 학기"].includes(label)),
+      ...Object.entries(details).filter(([, value]) => value != null && value !== "")
+        .map(([key, value]) => [FIELD_LABEL[key] || key, detailValue(key, value)]),
+    ] },
+  ].filter((group) => group.rows.length);
+  const receiptRows = metaRows.filter(([label]) => ["접수 경로", "문의 유형", "접수번호", "접수 시각"].includes(label));
+
   return (
     <>
       <button type="button" className="staff-back" onClick={onBack}>
@@ -202,7 +155,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
         목록으로
       </button>
 
-      <div className="staff-page-top">
+      <div className="staff-page-top staff-detail-heading">
         <div>
           <h1 className="staff-title">문의 처리</h1>
           <p className="staff-today">
@@ -211,7 +164,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
         </div>
         <span
           className={"staff-status " + (STATUS_TONE[item.status] || "")}
-          style={{ marginLeft: "auto", fontSize: 12, padding: "5px 12px" }}
+          style={{ marginLeft: "auto", fontSize: "var(--staff-meta-size)", padding: "5px 12px" }}
         >
           {STATUS_LABEL[item.status] || item.status}
         </span>
@@ -225,26 +178,48 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
         </div>
         <div className="staff-panel-body">
           <p className="staff-question-text">{item.question}</p>
-          <dl className="staff-meta-grid">
-            {metaRows.map(([k, v]) => (
-              <div key={k}>
-                <dt>{k}</dt>
-                <dd>{String(v)}</dd>
-              </div>
+          <div className="staff-receipt-meta">
+            {receiptRows.map(([label, value]) => (
+              <span key={label}><span>{label}</span> {String(value)}</span>
             ))}
-            {Object.entries(details).map(([k, v]) =>
-              v == null || v === "" ? null : (
-                <div key={k}>
-                  <dt>{FIELD_LABEL[k] || k}</dt>
-                  <dd>{detailValue(k, v)}</dd>
-                </div>
-              ),
-            )}
-          </dl>
+          </div>
+          <div className="staff-selected-groups">
+            {groups.map((group) => (
+              <section className="staff-selected-group" key={group.title}>
+                <h3>{group.title}</h3>
+                <dl className="staff-selected-grid">
+                  {group.rows.map(([label, value]) => (
+                    <div key={label}><dt>{label}</dt><dd>{String(value)}</dd></div>
+                  ))}
+                </dl>
+              </section>
+            ))}
+          </div>
         </div>
       </section>
 
-      {(missing.length > 0 || item.unresolved_reason || warnings.length > 0) && (
+      {locked && (
+        <section className="staff-panel staff-answer-panel" style={{ marginTop: 18 }}>
+          <div className="staff-panel-head">
+            <h2>최종 답변</h2>
+            <span className="staff-count">{dateTime(item.completed_at)} 등록</span>
+          </div>
+          <div className="staff-panel-body">
+            <div className="staff-final">{item.final_answer || "등록된 답변이 없습니다."}</div>
+          </div>
+        </section>
+      )}
+
+      {evidence.length > 0 && (
+        <details className="staff-sources" style={{ marginTop: 18 }}>
+          <summary>참고한 근거 자료 <span className="staff-count">{sources.length}건</span></summary>
+          <div className="staff-sources-body">
+            {sources.map((source, index) => <Evidence key={index} item={source} />)}
+          </div>
+        </details>
+      )}
+
+      {!locked && (missing.length > 0 || item.unresolved_reason || warnings.length > 0) && (
         <section className="staff-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
             <h2>확인이 필요한 사항</h2>
@@ -289,22 +264,11 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
         </section>
       )}
 
-      <section className="staff-panel" style={{ marginTop: 18 }}>
+      {!locked && <section className="staff-panel" style={{ marginTop: 18 }}>
         <div className="staff-panel-head">
-          <h2>근거</h2>
-          {evidence.length > 0 && (
-            <span className="staff-count">{evidence.length}건</span>
-          )}
+          <h2>문의 검토</h2>
         </div>
         <div className="staff-panel-body">
-          {evidence.length ? (
-            evidence.map((e, i) => <Evidence key={e?.chunk_id || i} item={e} />)
-          ) : (
-            <p className="staff-hint" style={{ margin: 0 }}>
-              아직 근거를 확인하지 않았습니다. Agent를 실행하면 관련 자료를 찾습니다.
-            </p>
-          )}
-          <SupportSummary summary={item.support_summary} />
           <div className="staff-button-row" style={{ marginTop: 14 }}>
             <button
               type="button"
@@ -312,7 +276,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
               disabled={!canRun || !!action}
               onClick={() => call("run", () => post(`/inquiries/${item.inquiry_id}/run`, {}))}
             >
-              {action === "run" ? "실행 중" : evidence.length ? "다시 실행" : "Agent 실행"}
+              {action === "run" ? "실행 중" : evidence.length ? "근거 다시 찾기" : "근거 찾기"}
             </button>
             {item.channel === "web" && !locked && (
               <button
@@ -348,7 +312,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
             </div>
           )}
         </div>
-      </section>
+      </section>}
 
       {!locked && (
         <section className="staff-panel" style={{ marginTop: 18 }}>
@@ -358,7 +322,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
           <div className="staff-panel-body">
             {question?.text ? (
               <>
-                <p className="staff-question-text" style={{ fontSize: 13.5 }}>
+                <p className="staff-question-text" >
                   {question.text}
                 </p>
                 <div className="staff-choices">
@@ -438,21 +402,12 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
         </section>
       )}
 
-      {(item.draft || locked) && (
+      {!locked && item.draft && (
         <section className="staff-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
-            <h2>{locked ? "최종 답변" : "학생에게 보낼 답변"}</h2>
+            <h2>학생에게 보낼 답변</h2>
           </div>
           <div className="staff-panel-body">
-            {locked ? (
-              <>
-                <div className="staff-final">{item.final_answer || "—"}</div>
-                <p className="staff-hint">
-                  {dateTime(item.completed_at)} 등록 · 학생이 내 문의에서 확인할 수
-                  있습니다.
-                </p>
-              </>
-            ) : (
               <>
                 <div className="staff-draft-label">
                   <span className="staff-kind">
@@ -521,24 +476,11 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
                   확인할 수 있습니다.
                 </p>
               </>
-            )}
           </div>
         </section>
       )}
 
-      {trace.length > 0 && (
-        <details className="staff-trace" style={{ marginTop: 18 }}>
-          <summary>실행 기록 {trace.length}단계</summary>
-          <ol>
-            {trace.map((t, i) => (
-              <li key={i}>
-                <span>{t?.step || "단계"}</span>
-                <span>{t?.detail || ""}</span>
-              </li>
-            ))}
-          </ol>
-        </details>
-      )}
+
     </>
   );
 }

@@ -129,7 +129,7 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
 
   return (
     <>
-      <div className="staff-page-top">
+      <div className="staff-page-top staff-phone-heading">
         <div>
           <h1 className="staff-title">전화 문의</h1>
           <p className="staff-today">통화 중 확인한 내용을 입력해 접수합니다.</p>
