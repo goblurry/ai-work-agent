@@ -17,11 +17,19 @@ import SupplementRequest from "./SupplementRequest";
 
 const CHOICE_FALLBACK = { yes: "예", no: "아니요", check: "추가 확인 필요" };
 
+// 규정 본문과 표는 수천 자에 이르기도 한다. 전부 펼쳐 두면 담당자가
+// 판단 영역까지 한참 스크롤해야 하므로 기본은 접어 둔다.
+const EVIDENCE_PREVIEW = 420;
+
 function Evidence({ item }) {
+  const [open, setOpen] = useState(false);
   const url = safeUrl(item?.source_url);
   const bits = [item?.chunk_id, item?.verification].filter(
     (v) => typeof v === "string" && v,
   );
+  const text = item?.text || "";
+  const long = text.length > EVIDENCE_PREVIEW;
+  const shown = open || !long ? text : text.slice(0, EVIDENCE_PREVIEW) + "…";
   return (
     <article className="staff-evidence">
       <div className="staff-evidence-top">
@@ -34,7 +42,17 @@ function Evidence({ item }) {
           </a>
         )}
       </div>
-      {item?.text && <p className="staff-evidence-text">{item.text}</p>}
+      {text && <p className="staff-evidence-text">{shown}</p>}
+      {long && (
+        <button
+          type="button"
+          className="staff-text-button"
+          style={{ marginTop: 6 }}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? "접기" : `전체 보기 (${text.length.toLocaleString()}자)`}
+        </button>
+      )}
       {bits.length > 0 && <p className="staff-evidence-meta">{bits.join(" · ")}</p>}
     </article>
   );
