@@ -36,7 +36,7 @@ function Evidence({ item }) {
   );
 }
 
-export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
+export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthorized }) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,12 +73,19 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
           setDirty(false);
         }
       })
-      .catch((e) => alive && setError(e.message))
+      .catch((e) => {
+        if (!alive) return;
+        if (e.status === 401) {
+          onUnauthorized?.();
+          return;
+        }
+        setError(e.message);
+      })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [inquiryId]);
+  }, [inquiryId, onUnauthorized]);
 
   async function call(name, fn) {
     if (action) return;
@@ -87,6 +94,10 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
     try {
       apply(await fn());
     } catch (e) {
+      if (e.status === 401) {
+        onUnauthorized?.();
+        return;
+      }
       setError(e.message);
     } finally {
       setAction("");
@@ -119,7 +130,11 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
   const next = asList(item.next_actions);
   const profile = item.profile || {};
   const details = item.details || {};
-  const canRun = !locked && item.status !== "waiting_student";
+  // 학생 보완 대기 중에는 실행하지 않고, 처리 중에는 강제 재실행 버튼을 두지 않는다.
+  const canRun =
+    !locked &&
+    item.status !== "waiting_student" &&
+    item.status !== "processing";
   const studentReply = item.draft_kind === "student_reply";
 
   // 접수번호는 학생이 조회할 때 쓰는 번호라 웹 문의에만 표시한다.
@@ -366,6 +381,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
                 disabled={
                   !!action ||
                   !evidence.length ||
+                  missing.length > 0 ||
                   (question?.text ? !choice : !judgement.trim())
                 }
                 onClick={() => {
@@ -393,11 +409,16 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
                     : "답변 초안 작성"}
               </button>
             </div>
-            {!evidence.length && (
+            {!evidence.length ? (
               <p className="staff-hint">
                 근거를 먼저 확인해야 초안을 작성할 수 있습니다.
               </p>
-            )}
+            ) : missing.length > 0 ? (
+              <p className="staff-hint">
+                부족한 학생 조건이 남아 있어 초안을 작성할 수 없습니다. 조건을
+                보완해 다시 실행하거나, 직접 답변을 작성해 저장해 주세요.
+              </p>
+            ) : null}
           </div>
         </section>
       )}

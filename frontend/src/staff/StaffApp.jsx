@@ -21,6 +21,14 @@ export default function StaffApp({ user, onSignOut }) {
   const [openId, setOpenId] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // 세션이 끊기면(12시간) 모든 요청이 401 이 된다.
+  // 같은 오류를 반복해서 보여 주지 말고 로그인 화면으로 돌려보낸다.
+  const handleUnauthorized = useCallback(() => {
+    setItems([]);
+    setOpenId(null);
+    onSignOut?.();
+  }, [onSignOut]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -28,11 +36,15 @@ export default function StaffApp({ user, onSignOut }) {
       const data = await request("/inquiries");
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
+      if (e.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleUnauthorized]);
 
   useEffect(() => {
     load();
@@ -106,6 +118,7 @@ export default function StaffApp({ user, onSignOut }) {
               inquiryId={openId}
               onBack={() => setOpenId(null)}
               onChanged={load}
+              onUnauthorized={handleUnauthorized}
             />
           ) : view === "dashboard" ? (
             <Dashboard
