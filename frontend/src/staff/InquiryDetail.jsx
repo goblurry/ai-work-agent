@@ -96,7 +96,12 @@ function SupportSummary({ summary }) {
   );
 }
 
-export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
+export default function InquiryDetail({
+  inquiryId,
+  onBack,
+  onChanged,
+  onUnauthorized,
+}) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -133,12 +138,19 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
           setDirty(false);
         }
       })
-      .catch((e) => alive && setError(e.message))
+      .catch((e) => {
+        if (!alive) return;
+        if (e.status === 401) {
+          onUnauthorized?.();
+          return;
+        }
+        setError(e.message);
+      })
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [inquiryId]);
+  }, [inquiryId, onUnauthorized]);
 
   async function call(name, fn) {
     if (action) return;
@@ -147,6 +159,10 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged }) {
     try {
       apply(await fn());
     } catch (e) {
+      if (e.status === 401) {
+        onUnauthorized?.();
+        return;
+      }
       setError(e.message);
     } finally {
       setAction("");
