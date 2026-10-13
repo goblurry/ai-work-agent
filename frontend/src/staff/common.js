@@ -15,6 +15,8 @@ export const STATUS_LABEL = {
   completed: "답변 완료",
 };
 export const STATUS_TONE = {
+  needs_review: "review",
+  draft_ready: "review",
   waiting_student: "attention",
   need_info: "attention",
   completed: "done",

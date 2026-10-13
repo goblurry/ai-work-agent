@@ -17,13 +17,13 @@ export default function InquiryRow({ item, onOpen, showChannel = false }) {
         onClick={() => onOpen(item.inquiry_id)}
       >
         <span className="staff-inquiry-content">
-          <span className="staff-inquiry-title">{item.question}</span>
+          <span className="staff-inquiry-title">{item.question.replace(/\s+/g," ")}</span>
           <span className="staff-row-meta">
-            {showChannel && <span>{CHANNEL_LABEL[item.channel] || item.channel}</span>}
-            <span>{TYPE_LABEL[item.inquiry_type] || "학사 문의"}</span>
+            {showChannel && <span className={"staff-channel-badge " + item.channel}>{CHANNEL_LABEL[item.channel] || item.channel}</span>}
+            <span className="staff-type-badge">{TYPE_LABEL[item.inquiry_type] || "학사 문의"}</span>
             {meta && <span>{meta}</span>}
             {item.channel === "web" && item.receipt_no && (
-              <span>접수번호 {item.receipt_no}</span>
+              <span className="staff-receipt-short">접수번호 {item.receipt_no.slice(0,8)}</span>
             )}
           </span>
         </span>
