@@ -149,11 +149,4 @@ export function warningLines(warnings) {
     lines.unshift(`근거 문서에 적용 대상(${fields.join(" · ")})이 명시되어 있지 않습니다. 모든 학생에게 적용되는 규정인지 확인해 주세요.`);
   return [...new Set(lines)];
 }
-// 근거 청크 ID 인용([24자리 해시_...])을 학생 답변 초안에서 지운다.
-export function cleanDraft(text) {
-  return (text || "")
-    .replace(/\s*\[(?:\s*[0-9a-f]{24}_[A-Za-z0-9_]+\s*[,;，；]?)+\]/g, "")
-    .replace(/[ \t]+(?=[.,])/g, "")
-    .trim();
-}
 export const asList = (value) => (Array.isArray(value) ? value : []);

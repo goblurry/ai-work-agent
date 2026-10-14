@@ -13,7 +13,6 @@ import {
   isLocked,
   safeUrl,
   warningLines,
-  cleanDraft,
 } from "./common";
 import SupplementRequest from "./SupplementRequest";
 
@@ -65,7 +64,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
   function apply(next, replaceDraft = false) {
     setItem(next);
     // 서버 초안은 담당자가 편집하지 않은 동안에만 반영한다. 판단·메모로 새로 작성한 초안은 항상 반영한다.
-    setDraft((current) => (dirty && !replaceDraft ? current : cleanDraft(next?.draft)));
+    setDraft((current) => (dirty && !replaceDraft ? current : next?.draft || ""));
     onChanged?.();
   }
 
@@ -79,7 +78,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
         setItem(data);
         if (loadedFor.current !== inquiryId) {
           loadedFor.current = inquiryId;
-          setDraft(cleanDraft(data?.draft));
+          setDraft(data?.draft || "");
           setChoice(data?.staff_choice || "");
           setMemo(data?.staff_memo || "");
           setJudgement(data?.staff_decision || "");
