@@ -74,5 +74,7 @@ git log --merges --date=format:'%m/%d %H:%M' --pretty='%ad  %s'
 
 ## 배포 주소
 
+- [담당자 화면](https://sng-agent.vercel.app/)
+- [학생 화면 (시연용)](https://sng-agent.vercel.app/student)
 - [API 문서·시연](https://goblurry-academic-ai-agent.hf.space/docs)
 - [서버 상태](https://goblurry-academic-ai-agent.hf.space/health)

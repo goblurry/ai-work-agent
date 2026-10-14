@@ -52,7 +52,8 @@ export default function Root() {
     );
   if (user?.role === "staff")
     return <StaffApp user={user} onSignOut={() => setUser(null)} />;
-  if (!user && new URLSearchParams(window.location.search).get("view") !== "student")
-    return <StaffLogin onAuthChange={setUser} />;
-  return <StudentApp onAuthChange={setUser} />;
+  // 기본 주소는 담당자 로그인이다. 학생 화면은 시연용이라 링크 없이 /student 에서만 연다.
+  if (window.location.pathname.replace(/\/+$/, "") === "/student")
+    return <StudentApp onAuthChange={setUser} />;
+  return <StaffLogin onAuthChange={setUser} />;
 }

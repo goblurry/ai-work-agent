@@ -766,9 +766,8 @@
   padding: 24px 0;
 }
 .staff-login .staff-panel-body { padding: 32px; }
-.staff-login .staff-title { margin-top: 12px; }
+.staff-login .staff-title { margin: 0; }
 .staff-login-form { display: grid; gap: 18px; margin-top: 28px; }
-.staff-login-student { display: inline-block; margin-top: 24px; color: var(--green); font-size: var(--staff-text-size); }
 
 /* 대시보드 */
 .staff-dashboard { max-width: 1440px; margin: 0 auto; }
