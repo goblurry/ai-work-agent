@@ -23,10 +23,6 @@ export default function StaffLogin({ onAuthChange }) {
 
   return (
     <div className="staff-shell">
-      <header className="staff-header">
-        <span className="staff-wordmark">학사 문의 처리</span>
-        <span className="staff-header-right">학사 행정 담당자</span>
-      </header>
       <main className="staff-login">
         <section className="staff-panel" aria-labelledby="staff-login-title">
           <div className="staff-panel-body">

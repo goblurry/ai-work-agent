@@ -695,12 +695,6 @@
 }
 
 /* 로그인 */
-.staff-login {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
 .staff-login form {
   width: 100%;
   max-width: 340px;
@@ -765,9 +759,11 @@
     flex-wrap: wrap;
   }
 }
+/* staff-shell 이 세로 flex 라서 margin:auto 로 화면 정중앙에 둔다 */
 .staff-login {
   width: min(440px, calc(100% - 32px));
-  margin: 80px auto;
+  margin: auto;
+  padding: 24px 0;
 }
 .staff-login .staff-panel-body { padding: 32px; }
 .staff-login .staff-title { margin-top: 12px; }
