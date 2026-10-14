@@ -14,11 +14,15 @@ export const STATUS_LABEL = {
   needs_review: "담당자 검토 필요",
   completed: "답변 완료",
 };
+// 담당자가 다음에 할 일 기준으로 색을 나눈다.
 export const STATUS_TONE = {
-  waiting_student: "attention",
-  need_info: "attention",
-  completed: "done",
+  received: "new",
   processing: "busy",
+  needs_review: "urgent",
+  need_info: "attention",
+  waiting_student: "attention",
+  draft_ready: "ready",
+  completed: "done",
 };
 export const CHANNEL_LABEL = { web: "웹", phone: "전화" };
 export const TRACK_OPTIONS = ["주전공", "복수전공", "부전공"];
