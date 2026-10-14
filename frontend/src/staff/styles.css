@@ -766,7 +766,7 @@
   padding: 24px 0;
 }
 .staff-login .staff-panel-body { padding: 32px; }
-.staff-login .staff-title { margin: 0; }
+.staff-login .staff-title { margin: 0 0 10px; }
 .staff-login-form { display: grid; gap: 18px; margin-top: 28px; }
 
 /* 대시보드 */
