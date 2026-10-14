@@ -9,6 +9,9 @@ Vite 의 `server.proxy` 는 개발 전용이라 `npm run build` 결과에 포함
 
 운영 주소: https://sng-agent.vercel.app
 
+Vercel 프로젝트가 GitHub 저장소와 연결되어 있어 `main` 에 머지하면 운영 주소에 자동 배포됩니다.
+PR 브랜치는 미리보기 주소로 배포되며, 링크는 PR 에 표시됩니다.
+
 `frontend/vercel.json` 이 `/api` 를 백엔드로 전달합니다. 설정은 이것뿐입니다.
 
 ```json
@@ -16,7 +19,7 @@ Vite 의 `server.proxy` 는 개발 전용이라 `npm run build` 결과에 포함
                  "destination": "https://goblurry-academic-ai-agent.hf.space/:path*" }] }
 ```
 
-프로젝트 설정은 **Root Directory `frontend`**, Framework Vite, Build `npm run build`, Output `dist` 입니다.
+프로젝트 설정은 **Root Directory `frontend`** (브랜치가 아니라 폴더 경로), Framework Vite, Build `npm run build`, Output `dist` 입니다.
 
 환경변수는 넣지 않습니다. `VITE_API_URL` 을 비워 두면 `src/shared/api.js` 가 `/api` 를 사용하고,
 위 rewrite 가 백엔드로 전달합니다. 키·토큰은 프론트에 두지 않습니다.
