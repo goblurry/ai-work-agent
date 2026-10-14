@@ -61,10 +61,10 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
   const [supplementOpen, setSupplementOpen] = useState(false);
   const loadedFor = useRef(null);
 
-  function apply(next) {
+  function apply(next, replaceDraft = false) {
     setItem(next);
-    // 서버 초안은 담당자가 편집하지 않은 동안에만 반영한다.
-    setDraft((current) => (dirty ? current : next?.draft || ""));
+    // 서버 초안은 담당자가 편집하지 않은 동안에만 반영한다. 판단·메모로 새로 작성한 초안은 항상 반영한다.
+    setDraft((current) => (dirty && !replaceDraft ? current : next?.draft || ""));
     onChanged?.();
   }
 
@@ -99,12 +99,12 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
     };
   }, [inquiryId, onUnauthorized]);
 
-  async function call(name, fn) {
+  async function call(name, fn, replaceDraft = false) {
     if (action) return;
     setAction(name);
     setError("");
     try {
-      apply(await fn());
+      apply(await fn(), replaceDraft);
     } catch (e) {
       if (e.status === 401) {
         onUnauthorized?.();
@@ -418,14 +418,13 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                       `/inquiries/${item.inquiry_id}/compose`,
                       question?.text ? { choice, memo } : { text: judgement, memo },
                     ),
+                    true,
                   );
                 }}
               >
                 {action === "compose"
                   ? "작성 중"
-                  : studentReply
-                    ? "답변 초안 다시 작성"
-                    : "답변 초안 작성"}
+                  : "판단·메모로 답변 초안 작성"}
               </button>
             </div>
             {!evidence.length ? (
