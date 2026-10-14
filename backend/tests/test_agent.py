@@ -104,3 +104,10 @@ def test_citations_titles_grouped_and_invented():
     assert not agent.valid_citations('없는 근거 ['+a+', '+fake+']',{a,b})
     assert not agent.valid_citations('[처리 순서] 근거 인용 없음',{a,b})
     assert not agent.valid_citations('일부만 일치 [c1, invented]',{'c1'})
+
+
+def test_strip_citations_after_validation():
+    a='851b638aada959a970d749ee_0004_fbf107b7fd_h20_0000'
+    b='abb8ff0a6e5c7dd4d8df3042_0012_a3a873b867_h20_0000'
+    text=f'주의가 필요합니다 [{a}] [{b}].\n[처리 순서]\n접수됩니다 [{a}, {b}].'
+    assert agent.strip_citations(text)=='주의가 필요합니다.\n[처리 순서]\n접수됩니다.'
