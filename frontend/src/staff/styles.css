@@ -528,6 +528,19 @@
   color: #2f3a35;
   margin: 0;
 }
+.staff-evidence-text.clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+.staff-evidence-more {
+  margin-top: 6px;
+  color: var(--green);
+  font-size: var(--staff-meta-size);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .staff-evidence-meta {
   color: var(--muted);
   font-size: var(--staff-meta-size);
