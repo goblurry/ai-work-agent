@@ -38,8 +38,8 @@ export default function Dashboard({ items, loading, onOpen, onReload, onPhone })
       </div>
 
       <dl className="staff-summary">
-        {counts.map(([label, value, icon]) => (
-          <div key={label}>
+        {counts.map(([label, value, icon], i) => (
+          <div key={label} className={i === 0 && value > 0 ? "highlight" : undefined}>
             <dt><span>{label}</span><Icon name={icon} size={18} /></dt>
             <dd className={value === 0 ? "zero" : ""}>{value}</dd>
           </div>
