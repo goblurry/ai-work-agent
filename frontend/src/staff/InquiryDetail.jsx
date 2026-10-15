@@ -129,6 +129,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
     );
 
   const locked = isLocked(item.status);
+  const isPhone = item.channel === "phone";
   const question = item.support_summary?.staff_question;
   const options = asList(question?.options);
   const labels = asList(question?.labels);
@@ -235,7 +236,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       {locked && (
         <section className="staff-panel staff-answer-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
-            <h2>최종 답변</h2>
+            <h2>{isPhone ? "통화 안내 기록" : "최종 답변"}</h2>
             <span className="staff-count">{dateTime(item.completed_at)} 등록</span>
           </div>
           <div className="staff-panel-body">
@@ -424,7 +425,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
               >
                 {action === "compose"
                   ? "작성 중"
-                  : "판단·메모로 답변 초안 작성"}
+                  : isPhone ? "판단·메모로 통화 안내 초안 작성" : "판단·메모로 답변 초안 작성"}
               </button>
             </div>
             {!evidence.length ? (
@@ -444,17 +445,17 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       {!locked && item.draft && (
         <section className="staff-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
-            <h2>학생에게 보낼 답변</h2>
+            <h2>{isPhone ? "통화 안내 내용" : "학생에게 보낼 답변"}</h2>
           </div>
           <div className="staff-panel-body">
               <>
                 <div className="staff-draft-label">
                   <span className="staff-kind">
-                    {studentReply ? "학생 답변 초안" : "담당자용 근거 요약"}
+                    {studentReply ? (isPhone ? "통화 안내 초안" : "학생 답변 초안") : "담당자용 근거 요약"}
                   </span>
                   {!studentReply && item.draft && (
                     <span className="staff-hint" style={{ margin: 0 }}>
-                      그대로 등록하지 말고 학생 답변으로 다듬어 주세요.
+                      {isPhone ? "통화로 안내할 내용으로 다듬어 주세요." : "그대로 등록하지 말고 학생 답변으로 다듬어 주세요."}
                     </span>
                   )}
                 </div>
@@ -493,7 +494,9 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                     onClick={() => {
                       if (
                         !window.confirm(
-                          "이 내용을 최종 답변으로 등록합니다. 등록하면 학생에게 공개되며 되돌릴 수 없습니다.",
+                          isPhone
+                            ? "통화 안내를 완료하고 이 내용을 처리 기록으로 남깁니다. 완료 후에는 수정할 수 없습니다."
+                            : "이 내용을 최종 답변으로 등록합니다. 등록하면 학생에게 공개되며 되돌릴 수 없습니다.",
                         )
                       )
                         return;
@@ -507,12 +510,13 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                       });
                     }}
                   >
-                    {action === "complete" ? "등록 중" : "답변 등록"}
+                    {action === "complete" ? "저장 중" : isPhone ? "안내 완료" : "답변 등록"}
                   </button>
                 </div>
                 <p className="staff-hint">
-                  초안 저장은 학생에게 공개되지 않습니다. 답변 등록을 해야 학생이
-                  확인할 수 있습니다.
+                  {isPhone
+                    ? "전화로 안내한 뒤 안내 완료를 눌러 주세요. 내용은 통화 처리 기록으로만 저장되며 학생 화면에는 공개되지 않습니다."
+                    : "초안 저장은 학생에게 공개되지 않습니다. 답변 등록을 해야 학생이 확인할 수 있습니다."}
                 </p>
               </>
           </div>
