@@ -31,6 +31,12 @@ def valid_citations(text, evidence_ids):
     return bool(found)
 
 
+def strip_citations(text):
+    """검증이 끝난 초안에서 청크 ID 인용 표시를 지운다. 근거는 담당자 화면의 근거 자료로 확인한다."""
+    text=re.sub(r'\s*\[(?:\s*[0-9a-f]{24}_[a-zA-Z0-9_]+\s*[,;，；]?)+\]','',text)
+    return re.sub(r'[ \t]+(?=[.,。])','',text).strip()
+
+
 def assess(evidence, record):
     """확인 가능한 조건만 검증하고 미확인은 명시적으로 남긴다."""
     profile = record['profile']
@@ -186,14 +192,16 @@ def _run_agent(record):
                     trace('정보요청',', '.join(missing))
                     return record
                 warnings = sorted({w for h in selected for w in h['verification']['warnings']})
+                # 적용 대상 미기재·추출 품질 경고는 참고로만 남긴다. 기간이 지났을 수 있는 공지만 검토로 보낸다.
+                blocking = [w for w in warnings if w.startswith('공지')]
                 text = generate_draft(record['question'], {**record['profile'],'target_term':record.get('target_term'),
                                       'as_of':record.get('as_of')}, selected)
                 valid = {h['chunk_id'] for h in selected}
                 if not valid_citations(text, valid):
                     return unresolved('생성된 초안의 근거 인용을 확인할 수 없습니다.')
-                record.update(draft=text,draft_kind='student_reply', evidence=selected,warnings=warnings,
-                              status='needs_review' if warnings else 'draft_ready',
-                              unresolved_reason='근거 적용 범위 또는 추출 품질 확인이 필요합니다.' if warnings else None,
+                record.update(draft=strip_citations(text),draft_kind='student_reply', evidence=selected,warnings=warnings,
+                              status='needs_review' if blocking else 'draft_ready',
+                              unresolved_reason='공지의 대상 학기·기간 확인이 필요합니다.' if blocking else None,
                               next_actions=['초안과 출처를 검토하고 수정·완료 처리해 주세요.'])
                 trace('초안작성','검색 근거로 초안을 작성하고 인용 ID를 검사했습니다.')
                 return record

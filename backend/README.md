@@ -103,6 +103,12 @@ Docker Space: [goblurry/academic-ai-agent](https://huggingface.co/spaces/goblurr
 .venv/bin/python backend/deploy/upload.py goblurry/academic-ai-agent
 ```
 
+코드만 바뀐 경우에는 `--code-only`를 씁니다. Space의 Secrets·Variables는 그대로 두고 코드 파일만 교체합니다. 커밋되지 않은 백엔드 변경이 있으면 중단하고, 커밋 메시지에 배포한 브랜치·커밋을 남깁니다. 보통 `main`을 체크아웃한 상태에서 실행합니다.
+
+```bash
+python3 backend/deploy/upload.py --code-only
+```
+
 Secrets: `DATABASE_URL`, `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_COLLECTION`, `OPENAI_API_KEY`, `DEMO_STUDENT_USERNAME`, `DEMO_STUDENT_PASSWORD`, `DEMO_STAFF_USERNAME`, `DEMO_STAFF_PASSWORD`.
 
 Variables: `OPENAI_MODEL`, `CORS_ORIGINS`. 프론트 배포 후 정확한 프론트 주소를 `CORS_ORIGINS`에 추가합니다. DB 비밀번호 변경은 기존 계정에 자동 반영되지 않습니다.

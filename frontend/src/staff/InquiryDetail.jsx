@@ -12,6 +12,7 @@ import {
   detailValue,
   isLocked,
   safeUrl,
+  warningLines,
 } from "./common";
 import SupplementRequest from "./SupplementRequest";
 
@@ -19,6 +20,9 @@ const CHOICE_FALLBACK = { yes: "예", no: "아니요", check: "추가 확인 필
 
 function Evidence({ item }) {
   const url = safeUrl(item?.source_url);
+  const [open, setOpen] = useState(false);
+  const text = asList(item?.texts).join("\n\n").trim();
+  const long = text.length > 280;
   return (
     <article className="staff-evidence">
       <div className="staff-evidence-top">
@@ -31,6 +35,14 @@ function Evidence({ item }) {
           </a>
         )}
       </div>
+      {text && (
+        <p className={"staff-evidence-text" + (long && !open ? " clamped" : "")}>{text}</p>
+      )}
+      {long && (
+        <button type="button" className="staff-evidence-more" onClick={() => setOpen(!open)}>
+          {open ? "접기" : "전체 보기"}
+        </button>
+      )}
       {item?.page != null && <span className="staff-evidence-meta">{item.page}쪽</span>}
     </article>
   );
@@ -49,10 +61,10 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
   const [supplementOpen, setSupplementOpen] = useState(false);
   const loadedFor = useRef(null);
 
-  function apply(next) {
+  function apply(next, replaceDraft = false) {
     setItem(next);
-    // 서버 초안은 담당자가 편집하지 않은 동안에만 반영한다.
-    setDraft((current) => (dirty ? current : next?.draft || ""));
+    // 서버 초안은 담당자가 편집하지 않은 동안에만 반영한다. 판단·메모로 새로 작성한 초안은 항상 반영한다.
+    setDraft((current) => (dirty && !replaceDraft ? current : next?.draft || ""));
     onChanged?.();
   }
 
@@ -87,12 +99,12 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
     };
   }, [inquiryId, onUnauthorized]);
 
-  async function call(name, fn) {
+  async function call(name, fn, replaceDraft = false) {
     if (action) return;
     setAction(name);
     setError("");
     try {
-      apply(await fn());
+      apply(await fn(), replaceDraft);
     } catch (e) {
       if (e.status === 401) {
         onUnauthorized?.();
@@ -117,16 +129,24 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
     );
 
   const locked = isLocked(item.status);
+  const isPhone = item.channel === "phone";
   const question = item.support_summary?.staff_question;
   const options = asList(question?.options);
   const labels = asList(question?.labels);
   const evidence = asList(item.evidence);
-  const sources = evidence.filter((source, index, all) =>
-    all.findIndex((other) => other?.title === source?.title &&
-      other?.source_url === source?.source_url && other?.page === source?.page) === index,
-  );
+  // 같은 문서·쪽의 청크는 한 카드로 묶고 본문은 이어서 보여 준다.
+  const sources = [];
+  for (const source of evidence) {
+    const same = sources.find((other) => other.title === source?.title &&
+      other.source_url === source?.source_url && other.page === source?.page);
+    const text = typeof source?.text === "string" ? source.text.trim() : "";
+    if (same) {
+      if (text && !same.texts.includes(text)) same.texts.push(text);
+    } else sources.push({ ...source, texts: text ? [text] : [] });
+  }
   const missing = asList(item.missing_fields);
-  const warnings = asList(item.warnings);
+  // 초안 준비 상태의 경고는 참고 사항이라 확인 요청 상자에 띄우지 않는다.
+  const warnings = item.status === "draft_ready" ? [] : asList(item.warnings);
   const next = asList(item.next_actions);
   const profile = item.profile || {};
   const details = item.details || {};
@@ -216,7 +236,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       {locked && (
         <section className="staff-panel staff-answer-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
-            <h2>최종 답변</h2>
+            <h2>{isPhone ? "통화 안내 기록" : "최종 답변"}</h2>
             <span className="staff-count">{dateTime(item.completed_at)} 등록</span>
           </div>
           <div className="staff-panel-body">
@@ -226,7 +246,7 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       )}
 
       {evidence.length > 0 && (
-        <details className="staff-sources" style={{ marginTop: 18 }}>
+        <details className="staff-sources" style={{ marginTop: 18 }} open>
           <summary>참고한 근거 자료 <span className="staff-count">{sources.length}건</span></summary>
           <div className="staff-sources-body">
             {sources.map((source, index) => <Evidence key={index} item={source} />)}
@@ -259,8 +279,8 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
               <div className="staff-note" style={{ marginTop: 10 }}>
                 <strong>주의</strong>
                 <ul>
-                  {warnings.map((w, i) => (
-                    <li key={i}>{typeof w === "string" ? w : JSON.stringify(w)}</li>
+                  {warningLines(warnings).map((w, i) => (
+                    <li key={i}>{w}</li>
                   ))}
                 </ul>
               </div>
@@ -399,14 +419,13 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                       `/inquiries/${item.inquiry_id}/compose`,
                       question?.text ? { choice, memo } : { text: judgement, memo },
                     ),
+                    true,
                   );
                 }}
               >
                 {action === "compose"
                   ? "작성 중"
-                  : studentReply
-                    ? "답변 초안 다시 작성"
-                    : "답변 초안 작성"}
+                  : isPhone ? "판단·메모로 통화 안내 초안 작성" : "판단·메모로 답변 초안 작성"}
               </button>
             </div>
             {!evidence.length ? (
@@ -426,17 +445,17 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
       {!locked && item.draft && (
         <section className="staff-panel" style={{ marginTop: 18 }}>
           <div className="staff-panel-head">
-            <h2>학생에게 보낼 답변</h2>
+            <h2>{isPhone ? "통화 안내 내용" : "학생에게 보낼 답변"}</h2>
           </div>
           <div className="staff-panel-body">
               <>
                 <div className="staff-draft-label">
                   <span className="staff-kind">
-                    {studentReply ? "학생 답변 초안" : "담당자용 근거 요약"}
+                    {studentReply ? (isPhone ? "통화 안내 초안" : "학생 답변 초안") : "담당자용 근거 요약"}
                   </span>
                   {!studentReply && item.draft && (
                     <span className="staff-hint" style={{ margin: 0 }}>
-                      그대로 등록하지 말고 학생 답변으로 다듬어 주세요.
+                      {isPhone ? "통화로 안내할 내용으로 다듬어 주세요." : "그대로 등록하지 말고 학생 답변으로 다듬어 주세요."}
                     </span>
                   )}
                 </div>
@@ -475,7 +494,9 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                     onClick={() => {
                       if (
                         !window.confirm(
-                          "이 내용을 최종 답변으로 등록합니다. 등록하면 학생에게 공개되며 되돌릴 수 없습니다.",
+                          isPhone
+                            ? "통화 안내를 완료하고 이 내용을 처리 기록으로 남깁니다. 완료 후에는 수정할 수 없습니다."
+                            : "이 내용을 최종 답변으로 등록합니다. 등록하면 학생에게 공개되며 되돌릴 수 없습니다.",
                         )
                       )
                         return;
@@ -489,12 +510,13 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
                       });
                     }}
                   >
-                    {action === "complete" ? "등록 중" : "답변 등록"}
+                    {action === "complete" ? "저장 중" : isPhone ? "안내 완료" : "답변 등록"}
                   </button>
                 </div>
                 <p className="staff-hint">
-                  초안 저장은 학생에게 공개되지 않습니다. 답변 등록을 해야 학생이
-                  확인할 수 있습니다.
+                  {isPhone
+                    ? "전화로 안내한 뒤 안내 완료를 눌러 주세요. 내용은 통화 처리 기록으로만 저장되며 학생 화면에는 공개되지 않습니다."
+                    : "초안 저장은 학생에게 공개되지 않습니다. 답변 등록을 해야 학생이 확인할 수 있습니다."}
                 </p>
               </>
           </div>

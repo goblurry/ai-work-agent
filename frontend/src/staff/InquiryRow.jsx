@@ -9,6 +9,7 @@ import {
 
 export default function InquiryRow({ item, onOpen, showChannel = false }) {
   const meta = profileLine(item.profile);
+  const tone = STATUS_TONE[item.status] || "";
   return (
     <li>
       <button
@@ -28,7 +29,7 @@ export default function InquiryRow({ item, onOpen, showChannel = false }) {
           </span>
         </span>
         <span className="staff-inquiry-end">
-          <span className={"staff-status " + (STATUS_TONE[item.status] || "")}>
+          <span className={"staff-status " + tone}>
             {STATUS_LABEL[item.status] || item.status}
           </span>
           <span className="staff-inquiry-time">{dateTime(item.created_at)}</span>
