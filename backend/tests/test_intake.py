@@ -60,9 +60,9 @@ def test_leave_context_preserves_application_and_receipt_distinction():
     assert r['question']=='반환 기준 문의'
 
 
-def test_staff_schema_has_six_main_operations(tmp_path):
+def test_staff_schema_has_eight_main_operations(tmp_path):
     with TestClient(create_app(tmp_path/'db')) as c:
         spec=c.get('/openapi.json').json()
         count=sum('담당자' in operation.get('tags',[]) for path in spec['paths'].values() for operation in path.values())
-        assert count==6
+        assert count==8
         assert '/inquiries/{inquiry_id}/continue' not in spec['paths']
