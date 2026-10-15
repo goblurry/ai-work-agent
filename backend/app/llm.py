@@ -127,16 +127,22 @@ def generate_student_reply(record: dict, decision: str) -> str:
     summary = record.get('support_summary') or {}
     from .intake import processing_record
     data = {'question': processing_record(record)['question'], 'staff_decision': decision,
+            'student_conditions': record.get('profile') or {},
+            'target_term': record.get('target_term'),
+            'inquiry_details': record.get('details') or {},
             'confirmed_courses': summary.get('confirmed_courses', []),
             'unverified_items': summary.get('unverified_items', []),
             'evidence': [{k: h.get(k) for k in ('title','source_url','source_file','page','text','course_rows')}
                          for h in record.get('evidence', [])]}
-    # 학수번호 문의는 서버가 교육과정 사실 문장을 앞에 붙이므로 판단만 짧게 쓴다.
-    # 일반 문의는 근거 규정 내용과 담당자 판단을 함께 설명한다.
-    length = ('1~2문장으로, 학생 질문에 대한 결론을 첫 문장에서 바로 말하세요. '
-              '교과과정 사실 설명은 서버가 앞에 붙이므로 반복하지 마세요. ') if summary.get('confirmed_courses') else (
-              '3~5문장으로, 학생 질문에 대한 결론을 첫 문장에서 바로 말하고 '
-              'evidence에서 확인되는 규정 내용(기준·기간·비율 등)으로 이유를 설명하세요. ')
+    # 과목 기본 정보는 아래에서 붙이되, 본문에도 적용 조건과 판단 이유를 설명한다.
+    length = (
+        '학생 질문에 대한 결론을 먼저 제시하고, 이어서 관련 근거와 판단 이유를 4~6문장 안팎으로 설명하세요. '
+        'evidence와 confirmed_courses에서 질문에 직접 관련된 규정·적용 대상·이수 조건을 골라 '
+        '학생 조건에 어떻게 적용되는지 연결하세요. 단순히 과목명·학점만 나열하거나 판단 메모만 바꿔 쓰지 마세요. '
+        '과목 기본 편성 정보는 서버가 앞에 붙이므로 같은 문장을 반복하지 마세요. '
+        '담당자 메모에 판단 이유가 여러 개 있으면 결론만 남기지 말고 그 이유를 빠짐없이 자연스럽게 반영하세요. '
+        '문서에 없는 내용이 담당자 메모에만 있으면 문서에서 확인된 규정인 것처럼 표현하지 마세요. '
+    )
     instructions = (
         '당신은 학과 사무실 담당자 본인입니다. 출력은 담당자가 학생에게 그대로 보낼 답변 문장입니다. '
         '정중한 합니다체 한국어 ' + length +
