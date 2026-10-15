@@ -803,3 +803,5 @@
 .staff-dashboard-empty p { margin: 10px 0 0; color: var(--muted); font-size: var(--staff-meta-size); }
 @media (max-width: 1000px) { .staff-dashboard .staff-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .staff-dashboard .staff-split { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .staff-dashboard .staff-summary { gap: 10px; } .staff-dashboard .staff-summary > div { padding: 18px; } }
+
+.phone-question .staff-field{display:flex;width:100%;box-sizing:border-box}.phone-question textarea{min-height:150px;resize:vertical}.phone-basic-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:20px}.phone-extra{margin-top:22px;border-top:1px solid #dfe6e1;padding-top:18px}.phone-extra summary{cursor:pointer;color:#00462a;font-size:14px;font-weight:600}.phone-extra summary span{font-weight:400;font-size:12px;color:#7b8780;margin-left:10px}.phone-extra-grid{margin-top:18px;grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:700px){.phone-basic-grid,.phone-extra-grid{grid-template-columns:1fr}.phone-extra summary span{display:block;margin:6px 0 0}}

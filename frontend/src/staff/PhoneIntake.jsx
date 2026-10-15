@@ -156,7 +156,18 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
             disabled={savedLock}
             style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
           >
-          <div className="staff-form-grid">
+          <div className="phone-question">
+            <Field label="문의 내용" full>
+              <textarea
+                rows={5}
+                value={form.question}
+                onChange={set("question")}
+                placeholder="통화 중 확인한 질문을 그대로 입력합니다."
+              />
+            </Field>
+          </div>
+          <p className="staff-hint">확인한 정보만 입력해 주세요. 나머지는 근거 확인 후 보완할 수 있습니다.</p>
+          <div className="staff-form-grid phone-basic-grid">
             <Field label="문의 유형">
               <select value={type} onChange={set("inquiry_type")}>
                 {Object.entries(TYPE_LABEL).map(([id, name]) => (
@@ -181,6 +192,9 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
                 placeholder="예: 2022"
               />
             </Field>
+          </div>
+          <details className="phone-extra"><summary>추가 조건 입력 <span>전공·학적 상태·신청 정보 등</span></summary>
+          <div className="staff-form-grid phone-extra-grid">
             <Field label="전공 구분">
               <select value={form.major_track} onChange={set("major_track")}>
                 <option value="">선택 안 함</option>
@@ -280,20 +294,14 @@ export default function PhoneIntake({ items, onOpen, onCreated, onReload, loadin
               </>
             )}
 
-            <Field label="문의 내용" full>
-              <textarea
-                rows={5}
-                value={form.question}
-                onChange={set("question")}
-                placeholder="통화 중 확인한 질문을 그대로 입력합니다."
-              />
-            </Field>
+
           </div>
+          </details>
           </fieldset>
 
           <div className="staff-button-row" style={{ marginTop: 16 }}>
             <button type="submit" className="staff-action" disabled={busy}>
-              {busy ? "처리 중" : savedId ? "다시 실행" : "저장하고 근거 확인"}
+              {busy ? "처리 중" : savedId ? "다시 실행" : "접수 및 근거 검색"}
             </button>
             {savedId && (
               <>
