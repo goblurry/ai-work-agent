@@ -51,6 +51,7 @@ function Evidence({ item }) {
 
 export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthorized }) {
   const [item, setItem] = useState(null);
+  const [managementTarget, setManagementTarget] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
@@ -200,16 +201,19 @@ export default function InquiryDetail({ inquiryId, onBack, onChanged, onUnauthor
             {TYPE_LABEL[item.inquiry_type] || "학사 문의"}
           </p>
         </div>
+        <div className="staff-detail-actions">
         <span
           className={"staff-status " + (STATUS_TONE[item.status] || "")}
           style={{ marginLeft: "auto", fontSize: "var(--staff-meta-size)", padding: "5px 12px" }}
         >
           {STATUS_LABEL[item.status] || item.status}
         </span>
+        <div ref={setManagementTarget} className="staff-management-links" />
+        </div>
       </div>
 
       {error && <p className="staff-error">{error}</p>}
-      <InquiryManagement key={inquiryId} item={item} path={`/inquiries/${inquiryId}`}
+      <InquiryManagement actionsTarget={managementTarget} key={inquiryId} item={item} path={`/inquiries/${inquiryId}`}
         canManage={!locked && item.status !== "processing" && !action}
         onUpdated={(next)=>{setItem(next);setDraft("");setChoice("");setMemo("");setJudgement("");setDirty(false);onChanged?.()}}
         onDeleted={()=>{onChanged?.();onBack()}} />
