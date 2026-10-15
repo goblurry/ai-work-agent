@@ -81,9 +81,9 @@ export default function StaffApp({ user, onSignOut }) {
   return (
     <div className="staff-shell">
       <header className="staff-header">
-        <span className="staff-wordmark">학사 문의 처리</span>
+        <div className="staff-brand"><span className="staff-brand-icon"><Icon name="book" size={18}/></span><span className="staff-wordmark">학사 문의 처리<small>학사 업무 지원 AI Agent</small></span></div>
         <div className="staff-header-right">
-          <span>{user?.username} · 담당자</span>
+          <span className="staff-account"><Icon name="user" size={15}/>{user?.username}<small>담당자</small></span>
           <button
             type="button"
             className="staff-text-button"
