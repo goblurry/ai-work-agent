@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { request } from "./api";
 import "./inquiry-management.css";
 
@@ -13,7 +14,7 @@ function initial(item) {
   return {question:item.question || "",inquiry_type:item.inquiry_type || "other",profile:{...item.profile},details:{...item.details},target_term:item.target_term || "",as_of:item.as_of || ""};
 }
 
-export default function InquiryManagement({item, path, canManage, onUpdated, onDeleted}) {
+export default function InquiryManagement({item, path, canManage, onUpdated, onDeleted, actionsTarget}) {
   const [mode,setMode]=useState("");
   const [value,setValue]=useState(()=>initial(item));
   const [busy,setBusy]=useState(false);
@@ -42,8 +43,8 @@ export default function InquiryManagement({item, path, canManage, onUpdated, onD
     const current=(group ? value[group]?.[key] : value[key]) ?? "";
     return <label key={key}><span>{label}</span>{OPTIONS[key] ? <select value={current} onChange={e=>change(group,key,e.target.value)} disabled={busy}><option value="">선택 안 함</option>{OPTIONS[key].map(o=><option key={Array.isArray(o)?o[0]:o} value={Array.isArray(o)?o[0]:o}>{Array.isArray(o)?o[1]:o}</option>)}</select> : <input type={type} value={current} onChange={e=>change(group,key,e.target.value)} disabled={busy} {...(key === "admission_year" ? {min:1900,max:2100} : {})} {...(key.endsWith("course_code") ? {pattern:"[0-9]{5}",inputMode:"numeric",maxLength:5} : {})}/>}</label>;
   }
-  return <div className="inquiry-management">
-    {!mode && <div className="im-actions"><button type="button" onClick={()=>{setValue(initial(item));setError("");setMode("edit")}}>문의 수정</button><button type="button" onClick={()=>{setError("");setMode("delete")}}>문의 삭제</button></div>}
+  return <div className={"inquiry-management" + (actionsTarget ? " im-compact" : "")}>
+    {!mode && (actionsTarget ? createPortal(<div className="im-actions"><button type="button" onClick={()=>{setValue(initial(item));setError("");setMode("edit")}}>문의 수정</button><button type="button" onClick={()=>{setError("");setMode("delete")}}>문의 삭제</button></div>, actionsTarget) : <div className="im-actions"><button type="button" onClick={()=>{setValue(initial(item));setError("");setMode("edit")}}>문의 수정</button><button type="button" onClick={()=>{setError("");setMode("delete")}}>문의 삭제</button></div>)}
     {mode === "edit" && <form onSubmit={save}>
       <h3>문의 수정</h3><p>수정하면 기존 검색 결과와 초안이 초기화됩니다. 담당자가 Agent를 다시 실행해야 합니다.</p>
       <fieldset disabled={busy}>
