@@ -33,15 +33,25 @@ def test_retry_observe_then_draft(monkeypatch):
     assert len([t for t in result['trace'] if t['step']=='자료검색'])==2
 
 
-def test_unknown_scope_never_ready(monkeypatch):
+def test_unknown_scope_ready_with_note(monkeypatch):
     hit=evidence();hit['applicability']['admission_year']={'status':'unknown'}
     decisions=iter([decision('search',query='복학'),decision('draft',evidence_ids=['c1'])])
     monkeypatch.setattr(agent,'decide_action',lambda *args:next(decisions))
     monkeypatch.setattr(agent,'search',lambda *args, **kwargs:[hit])
     monkeypatch.setattr(agent,'generate_draft',lambda *args:'기간 내 신청합니다. [c1]')
     result=agent.run_agent(record())
-    assert result['status']=='needs_review' and result['warnings']
-    assert result['draft'] is not None
+    assert result['status']=='draft_ready' and result['warnings']
+    assert result['draft'] is not None and result['unresolved_reason'] is None
+
+
+def test_notice_without_term_needs_review(monkeypatch):
+    hit=evidence();hit['source_type']='공지'
+    decisions=iter([decision('search',query='복학'),decision('draft',evidence_ids=['c1'])])
+    monkeypatch.setattr(agent,'decide_action',lambda *args:next(decisions))
+    monkeypatch.setattr(agent,'search',lambda *args, **kwargs:[hit])
+    monkeypatch.setattr(agent,'generate_draft',lambda *args:'기간 내 신청합니다. [c1]')
+    result=agent.run_agent(record())
+    assert result['status']=='needs_review' and result['draft'] is not None
 
 
 def test_scope_mismatch_excluded_and_missing_requested():
@@ -94,3 +104,10 @@ def test_citations_titles_grouped_and_invented():
     assert not agent.valid_citations('없는 근거 ['+a+', '+fake+']',{a,b})
     assert not agent.valid_citations('[처리 순서] 근거 인용 없음',{a,b})
     assert not agent.valid_citations('일부만 일치 [c1, invented]',{'c1'})
+
+
+def test_strip_citations_after_validation():
+    a='851b638aada959a970d749ee_0004_fbf107b7fd_h20_0000'
+    b='abb8ff0a6e5c7dd4d8df3042_0012_a3a873b867_h20_0000'
+    text=f'주의가 필요합니다 [{a}] [{b}].\n[처리 순서]\n접수됩니다 [{a}, {b}].'
+    assert agent.strip_citations(text)=='주의가 필요합니다.\n[처리 순서]\n접수됩니다.'

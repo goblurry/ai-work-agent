@@ -9,6 +9,7 @@ import {
 
 export default function InquiryRow({ item, onOpen, showChannel = false }) {
   const meta = profileLine(item.profile);
+  const tone = STATUS_TONE[item.status] || "";
   return (
     <li>
       <button
@@ -19,16 +20,17 @@ export default function InquiryRow({ item, onOpen, showChannel = false }) {
         <span className="staff-inquiry-content">
           <span className="staff-inquiry-title">{item.question}</span>
           <span className="staff-row-meta">
-            {showChannel && <span>{CHANNEL_LABEL[item.channel] || item.channel}</span>}
+            {showChannel && (
+              <span className={"staff-chip " + item.channel}>
+                {CHANNEL_LABEL[item.channel] || item.channel}
+              </span>
+            )}
             <span>{TYPE_LABEL[item.inquiry_type] || "학사 문의"}</span>
             {meta && <span>{meta}</span>}
-            {item.channel === "web" && item.receipt_no && (
-              <span>접수번호 {item.receipt_no}</span>
-            )}
           </span>
         </span>
         <span className="staff-inquiry-end">
-          <span className={"staff-status " + (STATUS_TONE[item.status] || "")}>
+          <span className={"staff-status " + tone}>
             {STATUS_LABEL[item.status] || item.status}
           </span>
           <span className="staff-inquiry-time">{dateTime(item.created_at)}</span>

@@ -5,32 +5,21 @@ API 가이드 7장을 그대로 따릅니다. **동일 출처 프록시** 방식
 Vite 의 `server.proxy` 는 개발 전용이라 `npm run build` 결과에 포함되지 않습니다.
 정적 호스팅에 파일만 올리면 `/api` 가 연결되지 않고, 쿠키 인증도 동작하지 않습니다.
 
-## Netlify (권장)
+## Vercel
 
-저장소가 **조직(snu-sng) 소유**라 Vercel 무료 플랜으로는 배포되지 않습니다.
-Vercel 은 조직 저장소에 Team(유료) 플랜을 요구합니다. Netlify 는 조직 저장소도 무료입니다.
+운영 주소: https://sng-agent.vercel.app
 
-`frontend/netlify.toml` 을 올려 두었습니다. 설정은 이것뿐입니다.
+Vercel 프로젝트가 GitHub 저장소와 연결되어 있어 `main` 에 머지하면 운영 주소에 자동 배포됩니다.
+PR 브랜치는 미리보기 주소로 배포되며, 링크는 PR 에 표시됩니다.
 
-1. https://app.netlify.com/signup 에서 **GitHub 로 로그인**
-2. **Add new site → Import an existing project → GitHub**
-3. `snu-sng/ai-work-agent` 선택
-4. 빌드 설정은 `netlify.toml` 이 지정하므로 **그대로 두고 Deploy**
-
-`base`, `command`, `publish` 가 파일에 있어서 화면에서 따로 바꿀 것이 없습니다.
-
-## Vercel (개인 저장소일 때)
-
-`frontend/vercel.json` 을 같이 올려 두었습니다. 설정은 이것뿐입니다.
+`frontend/vercel.json` 이 `/api` 를 백엔드로 전달합니다. 설정은 이것뿐입니다.
 
 ```json
 { "rewrites": [{ "source": "/api/:path*",
                  "destination": "https://goblurry-academic-ai-agent.hf.space/:path*" }] }
 ```
 
-1. Vercel 에서 저장소를 가져오고 **Root Directory 를 `frontend`** 로 지정합니다
-2. Framework 는 Vite, Build `npm run build`, Output `dist` (자동 인식됩니다)
-3. 배포 후 나온 주소를 확인합니다
+프로젝트 설정은 **Root Directory `frontend`** (브랜치가 아니라 폴더 경로), Framework Vite, Build `npm run build`, Output `dist` 입니다.
 
 환경변수는 넣지 않습니다. `VITE_API_URL` 을 비워 두면 `src/shared/api.js` 가 `/api` 를 사용하고,
 위 rewrite 가 백엔드로 전달합니다. 키·토큰은 프론트에 두지 않습니다.

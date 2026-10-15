@@ -14,11 +14,15 @@ export const STATUS_LABEL = {
   needs_review: "담당자 검토 필요",
   completed: "답변 완료",
 };
+// 담당자가 다음에 할 일 기준으로 색을 나눈다.
 export const STATUS_TONE = {
-  waiting_student: "attention",
-  need_info: "attention",
-  completed: "done",
+  received: "new",
   processing: "busy",
+  needs_review: "urgent",
+  need_info: "attention",
+  waiting_student: "attention",
+  draft_ready: "ready",
+  completed: "done",
 };
 export const CHANNEL_LABEL = { web: "웹", phone: "전화" };
 export const TRACK_OPTIONS = ["주전공", "복수전공", "부전공"];
@@ -125,5 +129,24 @@ export function safeUrl(url) {
   } catch {
     return null;
   }
+}
+// Agent 경고 문구를 담당자가 읽기 쉬운 문장으로 묶는다.
+export function warningLines(warnings) {
+  const fields = [];
+  const lines = [];
+  for (const w of warnings) {
+    if (typeof w !== "string") {
+      lines.push(JSON.stringify(w));
+      continue;
+    }
+    const m = w.match(/^(\w+): 원문 적용 조건 미확인$/);
+    if (m) fields.push(FIELD_LABEL[m[1]] || m[1]);
+    else if (w === "추출 내용·메타데이터 검토 필요")
+      lines.push("근거 문서에서 추출한 내용이 원문과 같은지 확인해 주세요.");
+    else lines.push(w);
+  }
+  if (fields.length)
+    lines.unshift(`근거 문서에 적용 대상(${fields.join(" · ")})이 명시되어 있지 않습니다. 모든 학생에게 적용되는 규정인지 확인해 주세요.`);
+  return [...new Set(lines)];
 }
 export const asList = (value) => (Array.isArray(value) ? value : []);

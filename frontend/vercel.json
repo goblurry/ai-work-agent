@@ -4,6 +4,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://goblurry-academic-ai-agent.hf.space/:path*"
+    },
+    {
+      "source": "/student",
+      "destination": "/index.html"
     }
   ]
 }
